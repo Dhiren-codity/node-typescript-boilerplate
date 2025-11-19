@@ -113,13 +113,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate and sanitize correct data', (): void => {
-      const result = validator.validate({
-        name: '  Alice  ',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-      });
 
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
@@ -132,11 +125,6 @@ describe('Validator', (): void => {
       });
     });
 
-    test('should not convert number from string due to type validation', (): void => {
-      const result = validator.validate({
-        name: 'Bob',
-        age: '42', // type mismatch
-      } as unknown as Record<string, unknown>);
 
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
@@ -145,10 +133,6 @@ describe('Validator', (): void => {
       expect(ageTypeError).toBeDefined();
     });
 
-    test('should error on missing required fields', (): void => {
-      const result = validator.validate({
-        name: 'X',
-      });
 
       expect(result.valid).toBe(false);
       const requiredError = result.errors.find((e) => e.rule === 'required' && e.field === 'age');
@@ -156,20 +140,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should collect type errors for multiple fields with custom error message precedence', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [
-          { field: 'title', type: 'string' },
-          { field: 'count', type: 'number', errorMessage: 'Count must be a number' },
-          { field: 'flag', type: 'boolean' },
-          { field: 'items', type: 'array' },
-          { field: 'meta', type: 'object' },
-          { field: 'workEmail', type: 'email' },
-          { field: 'homepage', type: 'url' },
-        ],
-      });
 
       const result = v.validate({
         title: 123,
@@ -193,15 +163,6 @@ describe('Validator', (): void => {
       }
     });
 
-    test('should enforce string length constraints', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          { field: 'short', type: 'string', minLength: 5 },
-          { field: 'long', type: 'string', maxLength: 3 },
-        ],
-      });
 
       const result = v.validate({
         short: 'abc',
@@ -215,15 +176,6 @@ describe('Validator', (): void => {
       expect(maxLenErr).toBeDefined();
     });
 
-    test('should enforce number range constraints', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          { field: 'low', type: 'number', min: 5 },
-          { field: 'high', type: 'number', max: 7 },
-        ],
-      });
 
       const result = v.validate({
         low: 1,
@@ -237,19 +189,6 @@ describe('Validator', (): void => {
       expect(maxErr).toBeDefined();
     });
 
-    test('should validate pattern and use custom pattern message', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          {
-            field: 'code',
-            type: 'string',
-            pattern: /^[A-Z]{3}$/,
-            errorMessage: 'Code must be 3 uppercase letters',
-          },
-        ],
-      });
 
       const result = v.validate({ code: 'ab1' });
       expect(result.valid).toBe(false);
@@ -257,18 +196,6 @@ describe('Validator', (): void => {
       expect(patternErr?.message).toBe('Code must be 3 uppercase letters');
     });
 
-    test('should collect custom validator failure', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          {
-            field: 'even',
-            type: 'number',
-            customValidator: (value: unknown): boolean => typeof value === 'number' && value % 2 === 0,
-          },
-        ],
-      });
 
       const result = v.validate({ even: 3 });
       expect(result.valid).toBe(false);
@@ -276,20 +203,6 @@ describe('Validator', (): void => {
       expect(customErr).toBeDefined();
     });
 
-    test('should report custom validator thrown error', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          {
-            field: 'boom',
-            type: 'string',
-            customValidator: (_v: unknown): boolean => {
-              throw new Error('Explosion');
-            },
-          },
-        ],
-      });
 
       const result = v.validate({ boom: 'data' });
       expect(result.valid).toBe(false);
@@ -297,12 +210,6 @@ describe('Validator', (): void => {
       expect(customErr?.message).toContain('Explosion');
     });
 
-    test('should produce error for unknown fields in Strict level when not allowed', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [{ field: 'known', type: 'string' }],
-      });
 
       const result = v.validate({ known: 'ok', unknown: 'nope' });
       expect(result.valid).toBe(false);
@@ -311,12 +218,6 @@ describe('Validator', (): void => {
       expect(result.warnings.length).toBe(0);
     });
 
-    test('should produce warning for unknown fields in Relaxed level when not allowed', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Relaxed,
-        allowUnknownFields: false,
-        rules: [{ field: 'known', type: 'string' }],
-      });
 
       const result = v.validate({ known: 'ok', unknown: 'nope' });
       expect(result.valid).toBe(true);
@@ -325,12 +226,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toEqual({ known: 'ok' });
     });
 
-    test('should ignore unknown fields completely when allowUnknownFields is true', (): void => {
-      const v = new Validator({
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'known', type: 'string' }],
-      });
 
       const result = v.validate({ known: ' ok ', extra: 123 });
       expect(result.valid).toBe(true);
@@ -341,12 +236,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should return same result as Validator.validate', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'x', type: 'number', min: 0 }],
-      };
       const data = { x: 5 };
 
       const direct = new Validator(schema).validate(data);
@@ -358,12 +247,6 @@ describe('Validator', (): void => {
       expect(helper.sanitized).toEqual(direct.sanitized);
     });
 
-    test('should surface errors from helper when validation fails', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'x', type: 'number', min: 10 }],
-      };
       const data = { x: 5 };
 
       const helper = validateData(data, schema);

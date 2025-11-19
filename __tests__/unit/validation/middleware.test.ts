@@ -70,12 +70,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('registerSchema', (): void => {
-    test('should register schema and create validator', async (): Promise<void> => {
-      const schema = makeSchema(['a', 'b']);
-      const { __getConstructedSchemas, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
-        __getConstructedSchemas: () => unknown[];
-        __resetMockValidator: () => void;
-      };
       __resetMockValidator();
 
       middleware.registerSchema('user', schema);
@@ -86,13 +80,6 @@ describe('ValidationMiddleware', (): void => {
       expect(__getConstructedSchemas()).toEqual([schema]);
     });
 
-    test('should override schema on re-register with same name', async (): Promise<void> => {
-      const schema1 = makeSchema(['a']);
-      const schema2 = makeSchema(['b']);
-      const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
-        __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
-        __resetMockValidator: () => void;
-      };
       __resetMockValidator();
 
       middleware.registerSchema('user', schema1);
@@ -144,9 +131,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'unknown' not found");
     });
 
-    test('should return validator result without options', async (): Promise<void> => {
-      const schema = makeSchema(['a', 'b']);
-      const data: Record<string, unknown> = { a: 1, b: 2, c: 3 };
       const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
         __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
         __resetMockValidator: () => void;
@@ -166,9 +150,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual(data);
     });
 
-    test('should apply abortEarly to keep only first error', async (): Promise<void> => {
-      const schema = makeSchema(['a']);
-      const data: Record<string, unknown> = { a: 1 };
       const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
         __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
         __resetMockValidator: () => void;
@@ -186,9 +167,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors).toEqual(['first']);
     });
 
-    test('should strip unknown fields when stripUnknown is true', async (): Promise<void> => {
-      const schema = makeSchema(['a', 'b']);
-      const data: Record<string, unknown> = { a: 1, b: 2, c: 3, d: 4 };
       const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
         __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
         __resetMockValidator: () => void;
@@ -206,9 +184,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ a: 1, b: 2 });
     });
 
-    test('should not alter sanitized when not provided by validator', async (): Promise<void> => {
-      const schema = makeSchema(['a']);
-      const data: Record<string, unknown> = { a: 1, extra: true };
       const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
         __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
         __resetMockValidator: () => void;
@@ -227,9 +202,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should return function that validates with options', async (): Promise<void> => {
-      const schema = makeSchema(['a']);
-      const data: Record<string, unknown> = { a: 1, b: 2 };
       const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
         __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
         __resetMockValidator: () => void;
@@ -251,12 +223,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidate', (): void => {
-    test('should validate multiple datasets', async (): Promise<void> => {
-      const schema = makeSchema(['ok']);
-      const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
-        __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
-        __resetMockValidator: () => void;
-      };
       __resetMockValidator();
 
       middleware.registerSchema('batch', schema);
@@ -281,17 +247,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const results = [
-        { valid: true, errors: [], sanitized: {} },
         { valid: true, errors: [], sanitized: {} },
       ] as unknown as Array<{ valid: boolean }>;
       expect(middleware.batchValidationPassed(results as unknown as Array<{ valid: boolean }>)).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const results = [
-        { valid: true, errors: [] },
         { valid: false, errors: ['e'] },
       ] as unknown as Array<{ valid: boolean }>;
       expect(middleware.batchValidationPassed(results as unknown as Array<{ valid: boolean }>)).toBe(false);

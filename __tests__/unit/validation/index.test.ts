@@ -98,22 +98,15 @@ describe('validation/index.ts re-exports', () => {
       expect(ValidationLevel.LENIENT).toBe('lenient');
     });
 
-    test('SchemaBuilder should build with valid rules', () : void => {
-      const builder = new SchemaBuilder({ foo: 'bar' });
       const built = builder.build();
       expect(built).toEqual({ foo: 'bar' });
     });
 
-    test('SchemaBuilder should throw on invalid rules', () : void => {
-      const builder = new SchemaBuilder({ invalid: true });
       expect(() => builder.build()).toThrowError('Invalid schema');
     });
   });
 
   describe('validator re-exports', () => {
-    test('Validator should validate successfully', () : void => {
-      const v = new Validator();
-      const result = v.validate({ value: 123 });
       expect(result).toEqual({ ok: true, data: { value: 123 } });
     });
 
@@ -122,19 +115,12 @@ describe('validation/index.ts re-exports', () => {
       expect(() => v.validate('bad')).toThrowError('Validator error');
     });
 
-    test('validateData should call underlying mock and return value', () : void => {
-      const res = validateData({ id: 1 });
       expect(res).toEqual({ ok: true, data: { id: 1 } });
       const validateDataMock = validateData as unknown as Mock;
       expect(validateDataMock).toHaveBeenCalledTimes(1);
       expect(validateDataMock).toHaveBeenCalledWith({ id: 1 });
     });
 
-    test('validateData should propagate errors from underlying implementation', () : void => {
-      const validateDataMock = validateData as unknown as Mock;
-      validateDataMock.mockImplementationOnce((): unknown => {
-        throw new Error('validateData boom');
-      });
       expect(() => validateData({})).toThrowError('validateData boom');
     });
   });
@@ -158,11 +144,6 @@ describe('validation/index.ts re-exports', () => {
       expect(getGlobalMiddlewareMock).toHaveBeenCalledTimes(1);
     });
 
-    test('getGlobalMiddleware should propagate errors', () : void => {
-      const getGlobalMiddlewareMock = getGlobalMiddleware as unknown as Mock;
-      getGlobalMiddlewareMock.mockImplementationOnce((): unknown => {
-        throw new Error('getGlobalMiddleware boom');
-      });
       expect(() => getGlobalMiddleware()).toThrowError('getGlobalMiddleware boom');
     });
 

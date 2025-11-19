@@ -9,6 +9,11 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('constructor', (): void => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
     test('should initialize with default level and no rules', (): void => {
       const schema = builder.build();
       expect(schema.name).toBe('TestSchema');
@@ -30,15 +35,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule with customValidator', (): void => {
-      const validator = vi.fn((value: unknown): boolean => typeof value === 'string');
-      const rule = {
-        field: 'custom',
-        type: 'string' as const,
-        required: true,
-        customValidator: validator,
-        errorMessage: 'Invalid custom',
-      };
       builder.addRule(rule);
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
@@ -54,8 +50,6 @@ describe('SchemaBuilder', (): void => {
       expect(validator).toHaveBeenCalledWith('abc');
     });
 
-    test('should preserve rule insertion order', (): void => {
-      builder.addRule({ field: 'a', type: 'string', required: true });
       builder.addRule({ field: 'b', type: 'number', required: false, min: 0 });
       builder.addRule({ field: 'c', type: 'boolean', required: true });
       const schema = builder.build();
@@ -64,9 +58,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add a required string field with options', (): void => {
-      const pattern = /^[A-Z]+$/;
-      builder.stringField('name', true, { minLength: 2, maxLength: 50, pattern, errorMessage: 'Bad name' });
       const schema = builder.build();
       const rule = schema.rules[0];
       expect(rule.field).toBe('name');
@@ -99,8 +90,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a required number field with min and max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 120, errorMessage: 'Invalid age' });
       const schema = builder.build();
       const rule = schema.rules[0];
       expect(rule.field).toBe('age');
@@ -301,9 +290,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('chaining', (): void => {
-    test('should support method chaining and maintain identity', (): void => {
-      const returned = builder
-        .stringField('name', true, { minLength: 1 })
         .numberField('age', false, { min: 0 })
         .emailField('email')
         .allowUnknown()

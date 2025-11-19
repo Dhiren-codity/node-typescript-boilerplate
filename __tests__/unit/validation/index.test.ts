@@ -113,8 +113,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('SchemaBuilder (re-exported)', () => {
-    test('should create instance and call methods from mocked class', (): void => {
-      const config: Record<string, unknown> = { strict: true };
       const builder = new SchemaBuilder(config);
       expect(builder).toBeInstanceOf(MockSchemaBuilder);
       // @ts-expect-error - using known mock method for test verification
@@ -124,8 +122,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('Validator (re-exported)', () => {
-    test('should create instance and call validate from mocked class', (): void => {
-      const schema: Record<string, unknown> = { fields: ['id'] };
       const instance = new Validator(schema);
       expect(instance).toBeInstanceOf(MockValidator);
       // @ts-expect-error - using known mock method for test verification
@@ -135,8 +131,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('validateData (re-exported function)', () => {
-    test('should forward call to mocked validateData and return its value', (): void => {
-      const input: Record<string, unknown> = { name: 'test' };
       const returnValue: Record<string, unknown> = { ok: true, from: 'mock' };
       mockedValidateData.mockReturnValueOnce(returnValue);
 
@@ -147,8 +141,6 @@ describe('validation/index barrel exports', () => {
       expect(result).toBe(returnValue);
     });
 
-    test('should propagate errors thrown by mocked validateData', (): void => {
-      const input: Record<string, unknown> = { bad: true };
       const error = new Error('validation failed');
       mockedValidateData.mockImplementationOnce((): never => {
         throw error;
@@ -159,8 +151,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('ValidationMiddleware (re-exported)', () => {
-    test('should create instance and use mocked handle method', (): void => {
-      const options: Record<string, unknown> = { mode: 'global' };
       const instance = new ValidationMiddleware(options);
       expect(instance).toBeInstanceOf(MockValidationMiddleware);
       // @ts-expect-error - using known mock method for test verification
@@ -170,8 +160,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('getGlobalMiddleware (re-exported function)', () => {
-    test('should forward call and return mocked value', (): void => {
-      const value: Record<string, unknown> = { mid: 'global' };
       mockedGetGlobalMiddleware.mockReturnValueOnce(value);
 
       const result = getGlobalMiddleware();
@@ -180,11 +168,6 @@ describe('validation/index barrel exports', () => {
       expect(result).toBe(value);
     });
 
-    test('should propagate errors from mocked getGlobalMiddleware', (): void => {
-      const error = new Error('no middleware');
-      mockedGetGlobalMiddleware.mockImplementationOnce((): never => {
-        throw error;
-      });
 
       expect(() => getGlobalMiddleware()).toThrow(error);
     });

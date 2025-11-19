@@ -47,8 +47,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('registerSchema', (): void => {
-    test('should register schema and create a Validator instance', (): void => {
-      const schema = { rules: [{ field: 'a' }] } as unknown as ValidationSchema;
       middleware.registerSchema('test', schema);
 
       expect(middleware.getSchema('test')).toBe(schema);
@@ -60,8 +58,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('unregisterSchema', (): void => {
-    test('should unregister existing schema and its validator', (): void => {
-      const schema = { rules: [{ field: 'x' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s1', schema);
       expect(middleware.getSchemaCount()).toBe(1);
 
@@ -84,8 +80,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('getSchema', (): void => {
-    test('should return the registered schema by name', (): void => {
-      const schema = { rules: [{ field: 'id' }] } as unknown as ValidationSchema;
       middleware.registerSchema('byName', schema);
       expect(middleware.getSchema('byName')).toBe(schema);
     });
@@ -103,8 +97,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'unknown' not found");
     });
 
-    test('should return validator result without options modifications', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -121,8 +113,6 @@ describe('ValidationMiddleware', (): void => {
       expect(returned).toEqual(resultObj);
     });
 
-    test('should apply abortEarly option to keep only the first error', (): void => {
-      const schema = { rules: [{ field: 'a' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -139,8 +129,6 @@ describe('ValidationMiddleware', (): void => {
       expect(returned.errors[0]).toEqual({ message: 'first' });
     });
 
-    test('should strip unknown fields from sanitized when stripUnknown is true', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -156,8 +144,6 @@ describe('ValidationMiddleware', (): void => {
       expect(returned.sanitized).toEqual({ a: 1, b: 2 });
     });
 
-    test('should not modify sanitized when it is undefined even if stripUnknown is true', (): void => {
-      const schema = { rules: [{ field: 'a' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -173,8 +159,6 @@ describe('ValidationMiddleware', (): void => {
       expect(returned.sanitized).toBeUndefined();
     });
 
-    test('should apply both abortEarly and stripUnknown options together', (): void => {
-      const schema = { rules: [{ field: 'x' }, { field: 'y' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -193,8 +177,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should create a callable that validates with bound schema and options', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const resultObj = {
@@ -222,8 +204,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'missing' not found");
     });
 
-    test('should validate each item in the array', (): void => {
-      const schema = { rules: [{ field: 'a' }] } as unknown as ValidationSchema;
       middleware.registerSchema('s', schema);
 
       const r1 = { valid: true, errors: [], sanitized: { a: 1 } } as unknown as ValidationResult;
@@ -244,17 +224,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const allValid: ValidationResult[] = [
-        { valid: true, errors: [], sanitized: {} } as unknown as ValidationResult,
         { valid: true, errors: [], sanitized: {} } as unknown as ValidationResult,
       ];
       expect(middleware.batchValidationPassed(allValid)).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const mixed: ValidationResult[] = [
-        { valid: true, errors: [], sanitized: {} } as unknown as ValidationResult,
         { valid: false, errors: [{ message: 'x' }], sanitized: {} } as unknown as ValidationResult,
       ];
       expect(middleware.batchValidationPassed(mixed)).toBe(false);
@@ -262,8 +236,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('getSchemaNames', (): void => {
-    test('should return all registered schema names', (): void => {
-      const s1 = { rules: [{ field: 'a' }] } as unknown as ValidationSchema;
       const s2 = { rules: [{ field: 'b' }] } as unknown as ValidationSchema;
       middleware.registerSchema('first', s1);
       middleware.registerSchema('second', s2);
@@ -285,8 +257,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('clearAll', (): void => {
-    test('should clear schemas and validators', (): void => {
-      middleware.registerSchema('a', { rules: [{ field: 'a' }] } as unknown as ValidationSchema);
       middleware.registerSchema('b', { rules: [{ field: 'b' }] } as unknown as ValidationSchema);
       expect(middleware.getSchemaCount()).toBe(2);
 
@@ -319,9 +289,6 @@ describe('Global middleware instance', (): void => {
   });
 
   describe('resetGlobalMiddleware', (): void => {
-    test('should reset the global instance so a new one is created', (): void => {
-      const before = getGlobalMiddleware();
-      before.registerSchema('g2', { rules: [{ field: 'y' }] } as unknown as ValidationSchema);
       expect(before.getSchemaNames()).toContain('g2');
 
       resetGlobalMiddleware();

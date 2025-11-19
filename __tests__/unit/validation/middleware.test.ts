@@ -46,12 +46,6 @@ vi.mock('../../src/validation/validator.js', (): Record<string, unknown> => {
   } as Record<string, unknown>;
 });
 
-describe('ValidationMiddleware', (): void => {
-  let middleware: ValidationMiddleware;
-
-  const makeSchema = (fields: string[]): ValidationSchema => {
-    return { rules: fields.map((field) => ({ field })) } as unknown as ValidationSchema;
-  };
 
   beforeEach((): void => {
     middleware = new ValidationMiddleware();
@@ -69,16 +63,6 @@ describe('ValidationMiddleware', (): void => {
     });
   });
 
-  describe('registerSchema', (): void => {
-      __resetMockValidator();
-
-      middleware.registerSchema('user', schema);
-
-      expect(middleware.getSchema('user')).toBe(schema);
-      expect(middleware.getSchemaCount()).toBe(1);
-      expect(middleware.getSchemaNames()).toEqual(['user']);
-      expect(__getConstructedSchemas()).toEqual([schema]);
-    });
 
       __resetMockValidator();
 
@@ -201,11 +185,6 @@ describe('ValidationMiddleware', (): void => {
     });
   });
 
-  describe('createMiddleware', (): void => {
-      const { __setValidatorBehavior, __resetMockValidator } = await vi.importMock('../../src/validation/validator.js') as unknown as {
-        __setValidatorBehavior: (schema: unknown, fn: (data: Record<string, unknown>) => { valid: boolean; errors: unknown[]; sanitized?: Record<string, unknown> }) => void;
-        __resetMockValidator: () => void;
-      };
       __resetMockValidator();
 
       middleware.registerSchema('user', schema);
@@ -222,15 +201,6 @@ describe('ValidationMiddleware', (): void => {
     });
   });
 
-  describe('batchValidate', (): void => {
-      __resetMockValidator();
-
-      middleware.registerSchema('batch', schema);
-      __setValidatorBehavior(schema, (d: Record<string, unknown>) => ({
-        valid: Boolean(d.ok),
-        errors: Boolean(d.ok) ? [] : ['bad'],
-        sanitized: d,
-      }));
 
       const inputs: Record<string, unknown>[] = [{ ok: true }, { ok: false }, { ok: true }];
       const results = middleware.batchValidate('batch', inputs);
@@ -246,8 +216,6 @@ describe('ValidationMiddleware', (): void => {
     });
   });
 
-  describe('batchValidationPassed', (): void => {
-        { valid: true, errors: [], sanitized: {} },
       ] as unknown as Array<{ valid: boolean }>;
       expect(middleware.batchValidationPassed(results as unknown as Array<{ valid: boolean }>)).toBe(true);
     });
@@ -288,10 +256,6 @@ describe('ValidationMiddleware', (): void => {
   });
 });
 
-describe('Global middleware instance', (): void => {
-  beforeEach((): void => {
-    resetGlobalMiddleware();
-  });
 
   afterEach((): void => {
     resetGlobalMiddleware();

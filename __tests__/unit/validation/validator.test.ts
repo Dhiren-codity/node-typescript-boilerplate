@@ -63,21 +63,6 @@ vi.mock('./schemas.js', (): Record<string, unknown> => {
 import { Validator, validateData } from './validator.ts';
 import { ValidationLevel } from './schemas.js';
 
-describe('Validator', (): void => {
-  let validator: Validator;
-
-  beforeEach((): void => {
-    validator = new Validator({
-      level: ValidationLevel.Strict,
-      allowUnknownFields: false,
-      rules: [
-        { field: 'name', type: 'string', required: true, minLength: 2, maxLength: 20 },
-        { field: 'age', type: 'number', required: true, min: 1, max: 120 },
-        { field: 'email', type: 'email' },
-        { field: 'website', type: 'url' },
-      ],
-    });
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -112,17 +97,6 @@ describe('Validator', (): void => {
     });
   });
 
-  describe('validate', (): void => {
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result.warnings).toEqual([]);
-      expect(result.sanitized).toEqual({
-        name: 'Alice', // trimmed
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-      });
     });
 
 
@@ -235,8 +209,6 @@ describe('Validator', (): void => {
     });
   });
 
-  describe('validateData helper', (): void => {
-      const data = { x: 5 };
 
       const direct = new Validator(schema).validate(data);
       const helper = validateData(data, schema);

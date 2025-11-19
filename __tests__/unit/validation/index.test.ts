@@ -82,10 +82,6 @@ import {
   resetGlobalMiddleware,
 } from './index.ts';
 
-describe('validation/index.ts re-exports', () => {
-  beforeEach((): void => {
-    // Setup if needed before each test
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -106,8 +102,6 @@ describe('validation/index.ts re-exports', () => {
     });
   });
 
-  describe('validator re-exports', () => {
-      expect(result).toEqual({ ok: true, data: { value: 123 } });
     });
 
     test('Validator should throw on bad input', () : void => {

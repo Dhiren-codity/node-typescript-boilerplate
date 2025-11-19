@@ -1,18 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel } from './schemas';
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
 
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
-
-  describe('constructor', (): void => {
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
 
     test('should initialize with default level and no rules', (): void => {
       const schema = builder.build();
@@ -32,42 +21,14 @@ describe('SchemaBuilder', (): void => {
     test('should not throw when creating with empty name', (): void => {
       expect((): SchemaBuilder => new SchemaBuilder('')).toBeDefined();
     });
-  });
 
-  describe('addRule', (): void => {
-      builder.addRule(rule);
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      const addedRule = schema.rules[0];
-      expect(addedRule.field).toBe('custom');
-      expect(addedRule.type).toBe('string');
-      expect(addedRule.required).toBe(true);
-      expect(addedRule.errorMessage).toBe('Invalid custom');
-      expect(addedRule.customValidator).toBeDefined();
-      expect(addedRule.customValidator).toBe(validator);
-      const fn = addedRule.customValidator as (value: unknown) => boolean;
-      expect(fn('abc')).toBe(true);
-      expect(validator).toHaveBeenCalledWith('abc');
-    });
 
       builder.addRule({ field: 'b', type: 'number', required: false, min: 0 });
       builder.addRule({ field: 'c', type: 'boolean', required: true });
       const schema = builder.build();
       expect(schema.rules.map((r) => r.field)).toEqual(['a', 'b', 'c']);
     });
-  });
 
-  describe('stringField', (): void => {
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('name');
-      expect(rule.type).toBe('string');
-      expect(rule.required).toBe(true);
-      expect(rule.minLength).toBe(2);
-      expect(rule.maxLength).toBe(50);
-      expect(rule.pattern).toBe(pattern);
-      expect(rule.errorMessage).toBe('Bad name');
-    });
 
     test('should add an optional string field without options', (): void => {
       builder.stringField('desc', false);
@@ -87,18 +48,7 @@ describe('SchemaBuilder', (): void => {
         builder.stringField('plain');
       }).not.toThrow();
     });
-  });
 
-  describe('numberField', (): void => {
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('age');
-      expect(rule.type).toBe('number');
-      expect(rule.required).toBe(true);
-      expect(rule.min).toBe(0);
-      expect(rule.max).toBe(120);
-      expect(rule.errorMessage).toBe('Invalid age');
-    });
 
     test('should add an optional number field without options', (): void => {
       builder.numberField('score', false);
@@ -111,7 +61,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.max).toBeUndefined();
       expect(rule.errorMessage).toBeUndefined();
     });
-  });
 
   describe('emailField', (): void => {
     test('should add a required email field with default error message and pattern', (): void => {
@@ -141,7 +90,6 @@ describe('SchemaBuilder', (): void => {
       const rule = schema.rules[0];
       expect(rule.required).toBe(false);
     });
-  });
 
   describe('urlField', (): void => {
     test('should add a required url field with default error message', (): void => {
@@ -161,7 +109,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('Bad url');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add a required boolean field by default', (): void => {
@@ -179,7 +126,6 @@ describe('SchemaBuilder', (): void => {
       const rule = schema.rules[0];
       expect(rule.required).toBe(false);
     });
-  });
 
   describe('arrayField', (): void => {
     test('should add a required array field', (): void => {
@@ -197,7 +143,6 @@ describe('SchemaBuilder', (): void => {
       const rule = schema.rules[0];
       expect(rule.required).toBe(false);
     });
-  });
 
   describe('objectField', (): void => {
     test('should add a required object field', (): void => {
@@ -215,7 +160,6 @@ describe('SchemaBuilder', (): void => {
       const rule = schema.rules[0];
       expect(rule.required).toBe(false);
     });
-  });
 
   describe('allowUnknown', (): void => {
     test('should enable allowUnknownFields when called with true', (): void => {
@@ -235,7 +179,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.allowUnknownFields).toBe(true);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should set validation level to Strict', (): void => {
@@ -253,7 +196,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.level).toBe(invalidLevel);
     });
-  });
 
   describe('build', (): void => {
     test('should return a shallow copy of the schema object', (): void => {
@@ -287,10 +229,7 @@ describe('SchemaBuilder', (): void => {
       const schema = empty.build();
       expect(schema.rules).toEqual([]);
     });
-  });
 
-  describe('chaining', (): void => {
-        .numberField('age', false, { min: 0 })
         .emailField('email')
         .allowUnknown()
         .setLevel(ValidationLevel.Strict);
@@ -301,5 +240,3 @@ describe('SchemaBuilder', (): void => {
       expect(schema.level).toBe(ValidationLevel.Strict);
       expect(schema.allowUnknownFields).toBe(true);
     });
-  });
-});

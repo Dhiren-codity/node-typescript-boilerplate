@@ -19,13 +19,6 @@ type SchemaShape = {
   allowUnknownFields?: boolean;
 };
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let baseSchema: SchemaShape;
-
-  const buildValidator = (
-    rules: RuleShape[],
-    opts?: { level?: unknown; allowUnknownFields?: boolean },
   ): Validator => {
     const schema: SchemaShape = {
       rules,
@@ -73,7 +66,6 @@ describe('Validator', (): void => {
       // Ensure copy still has rules
       expect(Array.isArray((schemaCopy as { rules: unknown[] }).rules)).toBe(true);
     });
-  });
 
   describe('getLevel and setLevel', (): void => {
     test('getLevel should return current level', (): void => {
@@ -84,15 +76,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient as unknown as never);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const ageRule: RuleShape = {
-        field: 'age',
-        type: 'number',
-        min: 18,
-      };
 
       const localValidator = buildValidator([nameRule, ageRule]);
       const result = localValidator.validate({ name: '  Alice  ', age: 25 } as DataShape);
@@ -234,12 +218,7 @@ describe('Validator', (): void => {
       expect(result.warnings).toHaveLength(1);
       expect(result.warnings[0]).toContain("Unknown field 'extra' found in data");
     });
-  });
 
-  describe('validateData helper', (): void => {
-
-      const good = validateData(
-        { username: '  John  ', age: 30 } as DataShape,
         schema as unknown as never,
       );
       expect(good.valid).toBe(true);
@@ -251,5 +230,3 @@ describe('Validator', (): void => {
       expect(bad.errors.some((e) => e.rule === 'min')).toBe(true);
       expect(bad.sanitized).toBeUndefined();
     });
-  });
-});

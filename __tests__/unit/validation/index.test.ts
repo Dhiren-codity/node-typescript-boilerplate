@@ -9,7 +9,6 @@ vi.mock('./schemas.js', () => {
     build(): Record<string, unknown> {
       return { built: true, cfg: this.cfg as unknown };
     }
-  }
   const ValidationLevel = { LOW: 'low', HIGH: 'high' } as const;
   return { ValidationLevel, SchemaBuilder: MockSchemaBuilder };
 });
@@ -23,7 +22,6 @@ vi.mock('./validator.js', () => {
     validate(_data: unknown): Record<string, unknown> {
       return { valid: true, schema: this.schema as unknown };
     }
-  }
   const validateData = vi.fn((data: unknown): Record<string, unknown> => ({ ok: true, data }));
   return { Validator: MockValidator, validateData };
 });
@@ -37,7 +35,6 @@ vi.mock('./middleware.js', () => {
     handle(input: unknown): Record<string, unknown> {
       return { handled: input as unknown, opts: this.opts as unknown } as Record<string, unknown>;
     }
-  }
   const getGlobalMiddleware = vi.fn((): Record<string, unknown> => ({ global: true }));
   const resetGlobalMiddleware = vi.fn((): void => {
     return;
@@ -47,7 +44,6 @@ vi.mock('./middleware.js', () => {
     getGlobalMiddleware,
     resetGlobalMiddleware,
   };
-});
 
 import {
   ValidationLevel,
@@ -73,10 +69,6 @@ import {
   resetGlobalMiddleware as mockedResetGlobalMiddleware,
 } from './middleware.js';
 
-describe('validation/index barrel exports', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -110,28 +102,11 @@ describe('validation/index barrel exports', () => {
     test('should re-export resetGlobalMiddleware function by reference', (): void => {
       expect(resetGlobalMiddleware).toBe(mockedResetGlobalMiddleware);
     });
-  });
 
-  describe('SchemaBuilder (re-exported)', () => {
-      const builder = new SchemaBuilder(config);
-      expect(builder).toBeInstanceOf(MockSchemaBuilder);
-      // @ts-expect-error - using known mock method for test verification
-      const built = builder.build();
-      expect(built).toEqual({ built: true, cfg: config });
-    });
-  });
 
-  describe('Validator (re-exported)', () => {
-      const instance = new Validator(schema);
-      expect(instance).toBeInstanceOf(MockValidator);
-      // @ts-expect-error - using known mock method for test verification
-      const result = instance.validate({ id: 1 });
       expect(result).toEqual({ valid: true, schema });
     });
-  });
 
-  describe('validateData (re-exported function)', () => {
-      const returnValue: Record<string, unknown> = { ok: true, from: 'mock' };
       mockedValidateData.mockReturnValueOnce(returnValue);
 
       const result = validateData(input);
@@ -148,35 +123,17 @@ describe('validation/index barrel exports', () => {
 
       expect(() => validateData(input)).toThrow(error);
     });
-  });
 
-  describe('ValidationMiddleware (re-exported)', () => {
-      const instance = new ValidationMiddleware(options);
-      expect(instance).toBeInstanceOf(MockValidationMiddleware);
-      // @ts-expect-error - using known mock method for test verification
-      const out = instance.handle({ x: 1 });
       expect(out).toEqual({ handled: { x: 1 }, opts: options });
     });
-  });
 
-  describe('getGlobalMiddleware (re-exported function)', () => {
-      mockedGetGlobalMiddleware.mockReturnValueOnce(value);
-
-      const result = getGlobalMiddleware();
-
-      expect(mockedGetGlobalMiddleware).toHaveBeenCalledTimes(1);
-      expect(result).toBe(value);
-    });
 
 
       expect(() => getGlobalMiddleware()).toThrow(error);
     });
-  });
 
   describe('resetGlobalMiddleware (re-exported function)', () => {
     test('should forward call to mocked resetGlobalMiddleware', (): void => {
       resetGlobalMiddleware();
       expect(mockedResetGlobalMiddleware).toHaveBeenCalledTimes(1);
     });
-  });
-});

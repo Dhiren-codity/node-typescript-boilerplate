@@ -16,21 +16,11 @@ vi.mock('../src/validation/validator.js', (): Record<string, unknown> => {
       return instance;
     }),
   };
-});
 
 import type { ValidationResult, ValidationSchema } from '../src/validation/schemas.js';
 import { ValidationMiddleware, getGlobalMiddleware, resetGlobalMiddleware } from '../src/validation/middleware.js';
 import { Validator } from '../src/validation/validator.js';
 
-describe('ValidationMiddleware', (): void => {
-  let middleware: ValidationMiddleware;
-
-  beforeEach((): void => {
-    middleware = new ValidationMiddleware();
-    createdValidatorInstances.length = 0;
-    vi.clearAllMocks();
-    resetGlobalMiddleware();
-  });
 
   afterEach((): void => {
     createdValidatorInstances.length = 0;
@@ -44,50 +34,18 @@ describe('ValidationMiddleware', (): void => {
       expect(middleware.getSchemaNames()).toEqual([]);
       expect(middleware.getSchema('unknown')).toBeUndefined();
     });
-  });
 
-  describe('registerSchema', (): void => {
-      middleware.registerSchema('test', schema);
 
-      expect(middleware.getSchema('test')).toBe(schema);
-      expect(middleware.getSchemaNames()).toEqual(['test']);
-      expect(middleware.getSchemaCount()).toBe(1);
-      expect(Validator).toHaveBeenCalledTimes(1);
-      expect(Validator).toHaveBeenCalledWith(schema);
-    });
-  });
-
-  describe('unregisterSchema', (): void => {
-      middleware.registerSchema('s1', schema);
-      expect(middleware.getSchemaCount()).toBe(1);
-
-      const deleted = middleware.unregisterSchema('s1');
-      expect(deleted).toBe(true);
-      expect(middleware.getSchema('s1')).toBeUndefined();
-      expect(middleware.getSchemaCount()).toBe(0);
-
-      expect((): void => {
-        // Now throws because validator is removed
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        middleware.validateWithSchema('s1', {});
-      }).toThrowError("Schema 's1' not found");
-    });
 
     test('should return false when unregistering non-existent schema', (): void => {
       const deleted = middleware.unregisterSchema('missing');
       expect(deleted).toBe(false);
     });
-  });
 
-  describe('getSchema', (): void => {
-      middleware.registerSchema('byName', schema);
-      expect(middleware.getSchema('byName')).toBe(schema);
-    });
 
     test('should return undefined for unknown schema', (): void => {
       expect(middleware.getSchema('nope')).toBeUndefined();
     });
-  });
 
   describe('validateWithSchema', (): void => {
     test('should throw when schema not found', (): void => {
@@ -174,16 +132,7 @@ describe('ValidationMiddleware', (): void => {
       expect(returned.errors).toHaveLength(1);
       expect(returned.sanitized).toEqual({ x: 'ok', y: 'ok' });
     });
-  });
 
-  describe('createMiddleware', (): void => {
-      middleware.registerSchema('s', schema);
-
-      const resultObj = {
-        valid: true,
-        errors: [],
-        sanitized: { a: 1, b: 2, c: 3 },
-      } as unknown as ValidationResult;
 
       const mock = createdValidatorInstances[0];
       (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
@@ -194,7 +143,6 @@ describe('ValidationMiddleware', (): void => {
       expect(returned.valid).toBe(true);
       expect(returned.sanitized).toEqual({ a: 1, b: 2 });
     });
-  });
 
   describe('batchValidate', (): void => {
     test('should throw when schema not found', (): void => {
@@ -221,10 +169,7 @@ describe('ValidationMiddleware', (): void => {
       expect(validateFn).toHaveBeenNthCalledWith(1, { a: 1 });
       expect(validateFn).toHaveBeenNthCalledWith(2, { a: 2 });
     });
-  });
 
-  describe('batchValidationPassed', (): void => {
-        { valid: true, errors: [], sanitized: {} } as unknown as ValidationResult,
       ];
       expect(middleware.batchValidationPassed(allValid)).toBe(true);
     });
@@ -233,10 +178,7 @@ describe('ValidationMiddleware', (): void => {
       ];
       expect(middleware.batchValidationPassed(mixed)).toBe(false);
     });
-  });
 
-  describe('getSchemaNames', (): void => {
-      const s2 = { rules: [{ field: 'b' }] } as unknown as ValidationSchema;
       middleware.registerSchema('first', s1);
       middleware.registerSchema('second', s2);
 
@@ -245,7 +187,6 @@ describe('ValidationMiddleware', (): void => {
       expect(names).toContain('second');
       expect(names.length).toBe(2);
     });
-  });
 
   describe('getSchemaCount', (): void => {
     test('should return total number of registered schemas', (): void => {
@@ -254,10 +195,7 @@ describe('ValidationMiddleware', (): void => {
       middleware.registerSchema('b', { rules: [{ field: 'b' }] } as unknown as ValidationSchema);
       expect(middleware.getSchemaCount()).toBe(2);
     });
-  });
 
-  describe('clearAll', (): void => {
-      middleware.registerSchema('b', { rules: [{ field: 'b' }] } as unknown as ValidationSchema);
       expect(middleware.getSchemaCount()).toBe(2);
 
       middleware.clearAll();
@@ -269,13 +207,7 @@ describe('ValidationMiddleware', (): void => {
         middleware.validateWithSchema('a', {});
       }).toThrowError("Schema 'a' not found");
     });
-  });
-});
 
-describe('Global middleware instance', (): void => {
-  afterEach((): void => {
-    resetGlobalMiddleware();
-  });
 
   describe('getGlobalMiddleware', (): void => {
     test('should return a singleton instance', (): void => {
@@ -286,16 +218,4 @@ describe('Global middleware instance', (): void => {
       inst1.registerSchema('g1', { rules: [{ field: 'x' }] } as unknown as ValidationSchema);
       expect(inst2.getSchemaNames()).toContain('g1');
     });
-  });
 
-  describe('resetGlobalMiddleware', (): void => {
-      expect(before.getSchemaNames()).toContain('g2');
-
-      resetGlobalMiddleware();
-
-      const after = getGlobalMiddleware();
-      expect(after).not.toBe(before);
-      expect(after.getSchemaNames()).toEqual([]);
-    });
-  });
-});

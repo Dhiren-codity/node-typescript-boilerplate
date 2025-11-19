@@ -1,0 +1,320 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
+  ValidationLevel: {
+    Strict: 'Strict',
+    Lenient: 'Lenient',
+  },
+}));
+
+import { Validator, validateData } from '../../src/validation/validator.js';
+import { ValidationLevel } from '../../src/validation/schemas.js';
+
+type RuleShape = Record<string, unknown>;
+type DataShape = Record<string, unknown>;
+type SchemaShape = {
+  rules: RuleShape[];
+  level: unknown;
+  allowUnknownFields?: boolean;
+};
+
+describe('Validator', (): void => {
+  let validator: Validator;
+  let baseSchema: SchemaShape;
+
+  const buildValidator = (
+    rules: RuleShape[],
+    opts?: { level?: unknown; allowUnknownFields?: boolean },
+  ): Validator => {
+    const schema: SchemaShape = {
+      rules,
+      level: opts?.level ?? ValidationLevel.Strict,
+      allowUnknownFields: opts?.allowUnknownFields ?? false,
+    };
+    return new Validator(schema as unknown as never);
+  };
+
+  beforeEach((): void => {
+    baseSchema = {
+      rules: [
+        {
+          field: 'name',
+          type: 'string',
+          required: true,
+          minLength: 2,
+        },
+      ],
+      level: ValidationLevel.Strict,
+      allowUnknownFields: false,
+    };
+    validator = new Validator(baseSchema as unknown as never);
+  });
+
+  afterEach((): void => {
+    // no-op for now
+  });
+
+  describe('constructor', (): void => {
+    test('should initialize with provided schema and level', (): void => {
+      expect(validator).toBeDefined();
+      expect(validator.getLevel()).toBe(ValidationLevel.Strict);
+    });
+
+    test('getSchema should return a shallow copy not linked to internal schema', (): void => {
+      const originalLevel = validator.getLevel();
+      const schemaCopy = validator.getSchema() as unknown as SchemaShape;
+      expect(schemaCopy.level).toBe(originalLevel);
+
+      // Mutate the copy level and ensure validator level remains unchanged
+      schemaCopy.level = ValidationLevel.Lenient;
+      expect(validator.getLevel()).toBe(originalLevel);
+
+      // Ensure copy still has rules
+      expect(Array.isArray((schemaCopy as { rules: unknown[] }).rules)).toBe(true);
+    });
+  });
+
+  describe('getLevel and setLevel', (): void => {
+    test('getLevel should return current level', (): void => {
+      expect(validator.getLevel()).toBe(ValidationLevel.Strict);
+    });
+
+    test('setLevel should update the level', (): void => {
+      validator.setLevel(ValidationLevel.Lenient as unknown as never);
+      expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
+    });
+  });
+
+  describe('validate', (): void => {
+    test('should validate required string and trim sanitized output', (): void => {
+      const nameRule: RuleShape = {
+        field: 'name',
+        type: 'string',
+        required: true,
+        minLength: 2,
+      };
+
+      const ageRule: RuleShape = {
+        field: 'age',
+        type: 'number',
+        min: 18,
+      };
+
+      const localValidator = buildValidator([nameRule, ageRule]);
+      const result = localValidator.validate({ name: '  Alice  ', age: 25 } as DataShape);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+      expect(result.sanitized).toBeDefined();
+      const sanitized = result.sanitized as Record<string, unknown>;
+      expect(sanitized.name).toBe('Alice');
+      expect(sanitized.age).toBe(25);
+    });
+
+    test('should report required error when field missing', (): void => {
+      const result = validator.validate({} as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.sanitized).toBeUndefined();
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]?.field).toBe('name');
+      expect(result.errors[0]?.rule).toBe('required');
+    });
+
+    test('should report required error when field null', (): void => {
+      const result = validator.validate({ name: null } as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0]?.rule).toBe('required');
+    });
+
+    test('should error on type mismatch and not provide sanitized output', (): void => {
+      const localValidator = buildValidator([
+        { field: 'age', type: 'number', required: true },
+      ]);
+      const result = localValidator.validate({ age: '30' } as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.sanitized).toBeUndefined();
+      expect(result.errors[0]?.field).toBe('age');
+      expect(result.errors[0]?.rule).toBe('type');
+    });
+
+    test('should validate minLength and maxLength for strings', (): void => {
+      const localValidator = buildValidator([
+        { field: 'username', type: 'string', required: true, minLength: 3, maxLength: 5 },
+      ]);
+      const tooShort = localValidator.validate({ username: 'ab' } as DataShape);
+      expect(tooShort.valid).toBe(false);
+      expect(tooShort.errors.some((e) => e.rule === 'minLength')).toBe(true);
+
+      const tooLong = localValidator.validate({ username: 'abcdef' } as DataShape);
+      expect(tooLong.valid).toBe(false);
+      expect(tooLong.errors.some((e) => e.rule === 'maxLength')).toBe(true);
+
+      const ok = localValidator.validate({ username: 'abcd' } as DataShape);
+      expect(ok.valid).toBe(true);
+    });
+
+    test('should validate numeric min and max range', (): void => {
+      const localValidator = buildValidator([
+        { field: 'score', type: 'number', required: true, min: 10, max: 20 },
+      ]);
+      const below = localValidator.validate({ score: 5 } as DataShape);
+      expect(below.valid).toBe(false);
+      expect(below.errors.some((e) => e.rule === 'min')).toBe(true);
+
+      const above = localValidator.validate({ score: 25 } as DataShape);
+      expect(above.valid).toBe(false);
+      expect(above.errors.some((e) => e.rule === 'max')).toBe(true);
+
+      const within = localValidator.validate({ score: 15 } as DataShape);
+      expect(within.valid).toBe(true);
+    });
+
+    test('should validate pattern for strings', (): void => {
+      const localValidator = buildValidator([
+        { field: 'tag', type: 'string', required: true, pattern: /^[a-z]+$/ },
+      ]);
+      const bad = localValidator.validate({ tag: 'ABC' } as DataShape);
+      expect(bad.valid).toBe(false);
+      expect(bad.errors[0]?.rule).toBe('pattern');
+
+      const good = localValidator.validate({ tag: 'abc' } as DataShape);
+      expect(good.valid).toBe(true);
+    });
+
+    test('should handle custom validator returning false', (): void => {
+      const localValidator = buildValidator([
+        {
+          field: 'pin',
+          type: 'string',
+          required: true,
+          customValidator: (v: unknown): boolean => typeof v === 'string' && v === '1234',
+        },
+      ]);
+      const result = localValidator.validate({ pin: '0000' } as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0]?.rule).toBe('custom');
+    });
+
+    test('should handle custom validator throwing with proper error capture', (): void => {
+      const localValidator = buildValidator([
+        {
+          field: 'token',
+          type: 'string',
+          required: true,
+          customValidator: (_v: unknown): boolean => {
+            throw new Error('boom');
+          },
+        },
+      ]);
+      const result = localValidator.validate({ token: 'abc' } as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.errors[0]?.rule).toBe('custom_error');
+      expect(result.errors[0]?.message).toContain('Custom validator threw error: boom');
+    });
+
+    test('should validate email type', (): void => {
+      const localValidator = buildValidator([
+        { field: 'email', type: 'email', required: true },
+      ]);
+      const bad = localValidator.validate({ email: 'not-an-email' } as DataShape);
+      expect(bad.valid).toBe(false);
+      expect(bad.errors[0]?.rule).toBe('type');
+
+      const good = localValidator.validate({ email: 'user@example.com' } as DataShape);
+      expect(good.valid).toBe(true);
+    });
+
+    test('should validate url type', (): void => {
+      const localValidator = buildValidator([
+        { field: 'site', type: 'url', required: true },
+      ]);
+      const bad = localValidator.validate({ site: 'ht!tp://bad' } as DataShape);
+      expect(bad.valid).toBe(false);
+      expect(bad.errors[0]?.rule).toBe('type');
+
+      const good = localValidator.validate({ site: 'https://example.com' } as DataShape);
+      expect(good.valid).toBe(true);
+    });
+
+    test('should validate array and object types', (): void => {
+      const localValidator = buildValidator([
+        { field: 'items', type: 'array', required: true },
+        { field: 'metadata', type: 'object', required: true },
+      ]);
+
+      const good = localValidator.validate({
+        items: [1, 2, 3],
+        metadata: { id: 1 },
+      } as DataShape);
+      expect(good.valid).toBe(true);
+
+      const badArray = localValidator.validate({
+        items: { not: 'array' },
+        metadata: { id: 1 },
+      } as DataShape);
+      expect(badArray.valid).toBe(false);
+      expect(badArray.errors.some((e) => e.field === 'items' && e.rule === 'type')).toBe(true);
+
+      const badObject = localValidator.validate({
+        items: [],
+        metadata: ['not', 'object'],
+      } as DataShape);
+      expect(badObject.valid).toBe(false);
+      expect(badObject.errors.some((e) => e.field === 'metadata' && e.rule === 'type')).toBe(true);
+    });
+
+    test('should flag unknown fields as error in Strict level', (): void => {
+      const localValidator = buildValidator(
+        [{ field: 'known', type: 'string', required: false }],
+        { level: ValidationLevel.Strict, allowUnknownFields: false },
+      );
+
+      const result = localValidator.validate({ known: 'x', unknown: 123 } as DataShape);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.rule === 'unknown_field' && e.field === 'unknown')).toBe(
+        true,
+      );
+      expect(result.warnings).toHaveLength(0);
+    });
+
+    test('should report unknown fields as warnings in Lenient level', (): void => {
+      const localValidator = buildValidator(
+        [{ field: 'known', type: 'string', required: false }],
+        { level: ValidationLevel.Lenient, allowUnknownFields: false },
+      );
+
+      const result = localValidator.validate({ known: 'x', extra: true } as DataShape);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toContain("Unknown field 'extra' found in data");
+    });
+  });
+
+  describe('validateData helper', (): void => {
+    test('should validate using helper with same behavior as class', (): void => {
+      const schema: SchemaShape = {
+        rules: [
+          { field: 'username', type: 'string', required: true, minLength: 3 },
+          { field: 'age', type: 'number', required: true, min: 18 },
+        ],
+        level: ValidationLevel.Strict,
+        allowUnknownFields: false,
+      };
+
+      const good = validateData(
+        { username: '  John  ', age: 30 } as DataShape,
+        schema as unknown as never,
+      );
+      expect(good.valid).toBe(true);
+      expect((good.sanitized as Record<string, unknown>).username).toBe('John');
+
+      const bad = validateData({ username: 'Jo', age: 17 } as DataShape, schema as unknown as never);
+      expect(bad.valid).toBe(false);
+      expect(bad.errors.some((e) => e.rule === 'minLength')).toBe(true);
+      expect(bad.errors.some((e) => e.rule === 'min')).toBe(true);
+      expect(bad.sanitized).toBeUndefined();
+    });
+  });
+});

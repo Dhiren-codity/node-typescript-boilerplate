@@ -1,50 +1,4 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-
-vi.mock('./schemas.js', () => {
-  class MockSchemaBuilder {
-    cfg?: unknown;
-    constructor(cfg?: unknown) {
-      this.cfg = cfg;
-    }
-    build(): Record<string, unknown> {
-      return { built: true, cfg: this.cfg as unknown };
-    }
-  const ValidationLevel = { LOW: 'low', HIGH: 'high' } as const;
-  return { ValidationLevel, SchemaBuilder: MockSchemaBuilder };
-});
-
-vi.mock('./validator.js', () => {
-  class MockValidator {
-    schema?: unknown;
-    constructor(schema?: unknown) {
-      this.schema = schema;
-    }
-    validate(_data: unknown): Record<string, unknown> {
-      return { valid: true, schema: this.schema as unknown };
-    }
-  const validateData = vi.fn((data: unknown): Record<string, unknown> => ({ ok: true, data }));
-  return { Validator: MockValidator, validateData };
-});
-
-vi.mock('./middleware.js', () => {
-  class MockValidationMiddleware {
-    opts?: Record<string, unknown>;
-    constructor(opts?: Record<string, unknown>) {
-      this.opts = opts;
-    }
-    handle(input: unknown): Record<string, unknown> {
-      return { handled: input as unknown, opts: this.opts as unknown } as Record<string, unknown>;
-    }
-  const getGlobalMiddleware = vi.fn((): Record<string, unknown> => ({ global: true }));
-  const resetGlobalMiddleware = vi.fn((): void => {
-    return;
-  });
-  return {
-    ValidationMiddleware: MockValidationMiddleware,
-    getGlobalMiddleware,
-    resetGlobalMiddleware,
-  };
-
 import {
   ValidationLevel,
   SchemaBuilder,
@@ -53,87 +7,187 @@ import {
   ValidationMiddleware,
   getGlobalMiddleware,
   resetGlobalMiddleware,
-} from './index.ts';
+} from './src/validation/index.ts';
 
-import {
-  ValidationLevel as MockValidationLevel,
-  SchemaBuilder as MockSchemaBuilder,
-} from './schemas.js';
-import {
-  Validator as MockValidator,
-  validateData as mockedValidateData,
-} from './validator.js';
-import {
-  ValidationMiddleware as MockValidationMiddleware,
-  getGlobalMiddleware as mockedGetGlobalMiddleware,
-  resetGlobalMiddleware as mockedResetGlobalMiddleware,
-} from './middleware.js';
+vi.mock('./src/validation/schemas.js', () => {
+  class MockSchemaBuilder {
+    private schema: Record<string, unknown>;
+    constructor(schema: Record<string, unknown> = {}) {
+      if ((schema as { invalid?: unknown }).invalid === true) {
+        throw new Error('invalid schema');
+      }
+      this.schema = schema;
+    }
+    build(): Record<string, unknown> {
+      return this.schema;
+    }
+  }
+  const ValidationLevelMock = Object.freeze({ LOW: 'low', HIGH: 'high' });
 
+  return {
+    ValidationLevel: ValidationLevelMock,
+    SchemaBuilder: MockSchemaBuilder,
+  };
+});
+
+vi.mock('./src/validation/validator.js', () => {
+  class MockValidator {
+    public validated: unknown[] = [];
+    validate(input: unknown): { ok: boolean; input: unknown } {
+      if (input === 'bad-validate') {
+        throw new Error('validate error');
+      }
+      this.validated.push(input);
+      return { ok: true, input };
+    }
+  }
+
+  const validateDataMock = vi.fn((data: unknown) => {
+    if (data === 'throw') {
+      throw new Error('validation failed');
+    }
+    return { success: true, value: data };
+  });
+
+  return {
+    Validator: MockValidator,
+    validateData: validateDataMock,
+  };
+});
+
+vi.mock('./src/validation/middleware.js', () => {
+  class MockValidationMiddleware {
+    public options: Record<string, unknown>;
+    constructor(options?: Record<string, unknown>) {
+      if (options && (options as { throw?: unknown }).throw === true) {
+        throw new Error('middleware options invalid');
+      }
+      this.options = options ?? {};
+    }
+    handle(_input: unknown): string {
+      return 'handled';
+    }
+  }
+
+  let globalInstance: MockValidationMiddleware | null = null;
+
+  const getGlobalMiddlewareMock = vi.fn(() => {
+    if (!globalInstance) {
+      globalInstance = new MockValidationMiddleware({ global: true });
+    }
+    return globalInstance;
+  });
+
+  const resetGlobalMiddlewareMock = vi.fn(() => {
+    globalInstance = null;
+  });
+
+  return {
+    ValidationMiddleware: MockValidationMiddleware,
+    getGlobalMiddleware: getGlobalMiddlewareMock,
+    resetGlobalMiddleware: resetGlobalMiddlewareMock,
+  };
+});
+
+describe('validation/index re-exports', () => {
+  beforeEach((): void => {
+    // No-op setup; ensure clean calls per test
+  });
 
   afterEach((): void => {
     vi.clearAllMocks();
+    // Ensure global middleware state is cleaned up after each test
+    resetGlobalMiddleware();
   });
 
-  describe('re-export identities', () => {
-    test('should re-export ValidationLevel by reference', (): void => {
-      expect(ValidationLevel).toBe(MockValidationLevel);
+  describe('ValidationLevel', () => {
+    test('should be defined and match mocked object', (): void => {
+      expect(ValidationLevel).toBeDefined();
+      expect(typeof ValidationLevel).toBe('object');
+      expect(ValidationLevel).toHaveProperty('LOW', 'low');
+      expect(ValidationLevel).toHaveProperty('HIGH', 'high');
+    });
+  });
+
+  describe('SchemaBuilder', () => {
+    test('should initialize and build schema (happy path)', (): void => {
+      const schemaInput: Record<string, unknown> = { field: 'value' };
+      const builder = new SchemaBuilder(schemaInput);
+      const built = builder.build();
+      expect(built).toEqual(schemaInput);
     });
 
-    test('should re-export SchemaBuilder class by reference', (): void => {
-      expect(SchemaBuilder).toBe(MockSchemaBuilder);
+    test('should throw on invalid schema (error case)', (): void => {
+      const badSchema: Record<string, unknown> = { invalid: true };
+      expect(() => new SchemaBuilder(badSchema)).toThrowError('invalid schema');
+    });
+  });
+
+  describe('Validator class', () => {
+    test('should initialize and validate data (happy path)', (): void => {
+      const validator = new Validator();
+      const result = validator.validate({ a: 1 });
+      expect(result).toEqual({ ok: true, input: { a: 1 } });
     });
 
-    test('should re-export Validator class by reference', (): void => {
-      expect(Validator).toBe(MockValidator);
+    test('should throw when validate encounters bad input (error case)', (): void => {
+      const validator = new Validator();
+      expect(() => validator.validate('bad-validate')).toThrowError('validate error');
     });
+  });
 
-    test('should re-export validateData function by reference', (): void => {
-      expect(validateData).toBe(mockedValidateData);
-    });
-
-    test('should re-export ValidationMiddleware class by reference', (): void => {
-      expect(ValidationMiddleware).toBe(MockValidationMiddleware);
-    });
-
-    test('should re-export getGlobalMiddleware function by reference', (): void => {
-      expect(getGlobalMiddleware).toBe(mockedGetGlobalMiddleware);
-    });
-
-    test('should re-export resetGlobalMiddleware function by reference', (): void => {
-      expect(resetGlobalMiddleware).toBe(mockedResetGlobalMiddleware);
-    });
-
-
-      expect(result).toEqual({ valid: true, schema });
-    });
-
-      mockedValidateData.mockReturnValueOnce(returnValue);
-
+  describe('validateData function', () => {
+    test('should call underlying function and return result (happy path)', (): void => {
+      const input = { id: 123 };
       const result = validateData(input);
-
-      expect(mockedValidateData).toHaveBeenCalledTimes(1);
-      expect(mockedValidateData).toHaveBeenCalledWith(input);
-      expect(result).toBe(returnValue);
+      expect(result).toEqual({ success: true, value: input });
+      expect(validateData).toHaveBeenCalledTimes(1);
+      expect(validateData).toHaveBeenCalledWith(input);
     });
 
-      const error = new Error('validation failed');
-      mockedValidateData.mockImplementationOnce((): never => {
-        throw error;
-      });
+    test('should throw error for invalid input (error case)', (): void => {
+      expect(() => validateData('throw')).toThrowError('validation failed');
+    });
+  });
 
-      expect(() => validateData(input)).toThrow(error);
+  describe('ValidationMiddleware class', () => {
+    test('should initialize and handle data (happy path)', (): void => {
+      const mw = new ValidationMiddleware({ mode: 'strict' });
+      const handled = mw.handle({ payload: true });
+      expect(handled).toBe('handled');
+      expect(mw.options).toEqual({ mode: 'strict' });
     });
 
-      expect(out).toEqual({ handled: { x: 1 }, opts: options });
+    test('should throw for invalid options (error case)', (): void => {
+      expect(() => new ValidationMiddleware({ throw: true })).toThrowError(
+        'middleware options invalid'
+      );
     });
+  });
 
-
-
-      expect(() => getGlobalMiddleware()).toThrow(error);
-    });
-
-  describe('resetGlobalMiddleware (re-exported function)', () => {
-    test('should forward call to mocked resetGlobalMiddleware', (): void => {
+  describe('Global middleware functions', () => {
+    test('should get a singleton global middleware (happy path)', (): void => {
       resetGlobalMiddleware();
-      expect(mockedResetGlobalMiddleware).toHaveBeenCalledTimes(1);
+      const first = getGlobalMiddleware();
+      const second = getGlobalMiddleware();
+      expect(first).toBeDefined();
+      expect(second).toBeDefined();
+      expect(second).toBe(first);
+      expect(getGlobalMiddleware).toHaveBeenCalledTimes(2);
     });
+
+    test('should reset global middleware and create a new instance afterwards', (): void => {
+      resetGlobalMiddleware();
+      const beforeReset = getGlobalMiddleware();
+      expect(beforeReset).toBeDefined();
+
+      resetGlobalMiddleware();
+      expect(resetGlobalMiddleware).toHaveBeenCalledTimes(2); // once from afterEach previous test, once here
+
+      const afterReset = getGlobalMiddleware();
+      expect(afterReset).toBeDefined();
+      expect(afterReset).not.toBe(beforeReset);
+      expect(getGlobalMiddleware).toHaveBeenCalledTimes(2);
+    });
+  });
+});

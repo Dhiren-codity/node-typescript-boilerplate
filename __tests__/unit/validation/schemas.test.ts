@@ -1,12 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel } from '../../src/validation/schemas';
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.restoreAllMocks();
@@ -27,7 +21,6 @@ describe('SchemaBuilder', (): void => {
       const schema = local.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('addRule', (): void => {
 
@@ -57,7 +50,6 @@ describe('SchemaBuilder', (): void => {
         });
       }).not.toThrow();
     });
-  });
 
   describe('stringField', (): void => {
       const schema = builder.build();
@@ -88,10 +80,7 @@ describe('SchemaBuilder', (): void => {
         builder.stringField('', true);
       }).not.toThrow();
     });
-  });
 
-  describe('numberField', (): void => {
-      const { rules } = builder.build();
       expect(rules).toHaveLength(1);
       const rule = rules[0];
       expect(rule.field).toBe('age');
@@ -111,66 +100,30 @@ describe('SchemaBuilder', (): void => {
         builder.numberField('temperature', true, { min: -273.15, max: 10_000 });
       }).not.toThrow();
     });
-  });
 
-  describe('emailField', (): void => {
-      expect(rules).toHaveLength(1);
-      const rule = rules[0];
-      expect(rule.type).toBe('email');
-      expect(rule.required).toBe(true);
-      expect(rule.errorMessage).toBe('Invalid email format');
-      // Compare regex by string representation
-      expect(rule.pattern?.toString()).toBe('/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/');
-    });
 
       const rule = rules[0];
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('Bad email');
     });
-  });
 
-  describe('urlField', (): void => {
-      const rule = rules[0];
-      expect(rule.type).toBe('url');
-      expect(rule.required).toBe(true);
-      expect(rule.errorMessage).toBe('Invalid URL format');
-    });
 
       const rule = rules[0];
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('URL not valid');
     });
-  });
 
-  describe('booleanField', (): void => {
-      const rule = rules[0];
-      expect(rule.type).toBe('boolean');
-      expect(rule.required).toBe(true);
-    });
 
       expect(rules[0].required).toBe(false);
     });
-  });
 
-  describe('arrayField', (): void => {
-      const rule = rules[0];
-      expect(rule.type).toBe('array');
-      expect(rule.required).toBe(true);
-    });
 
       expect(rules[0].required).toBe(false);
     });
-  });
 
-  describe('objectField', (): void => {
-      const rule = rules[0];
-      expect(rule.type).toBe('object');
-      expect(rule.required).toBe(true);
-    });
 
       expect(rules[0].required).toBe(false);
     });
-  });
 
   describe('allowUnknown', (): void => {
     test('should default to allowUnknownFields=false and set to true', (): void => {
@@ -191,7 +144,6 @@ describe('SchemaBuilder', (): void => {
       schema = builder.build();
       expect(schema.allowUnknownFields).toBe(false);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should update validation level', (): void => {
@@ -203,7 +155,6 @@ describe('SchemaBuilder', (): void => {
       schema = builder.build();
       expect(schema.level).toBe(ValidationLevel.Lenient);
     });
-  });
 
   describe('build', (): void => {
     test('should return a shallow copy of schema (top-level object cloned)', (): void => {
@@ -241,7 +192,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules).toHaveLength(3);
       expect(schema.rules.map((r): string => r.field)).toEqual(['title', 'price', 'available']);
     });
-  });
 
   describe('chaining and robustness', (): void => {
     test('methods should be chainable (return this) and not throw', (): void => {
@@ -263,5 +213,3 @@ describe('SchemaBuilder', (): void => {
       expect(schema.allowUnknownFields).toBe(true);
       expect(schema.level).toBe(ValidationLevel.Moderate);
     });
-  });
-});

@@ -21,14 +21,12 @@ vi.mock('./src/validation/schemas.js', () => {
     build(): Record<string, unknown> {
       return this.schema;
     }
-  }
   const ValidationLevelMock = Object.freeze({ LOW: 'low', HIGH: 'high' });
 
   return {
     ValidationLevel: ValidationLevelMock,
     SchemaBuilder: MockSchemaBuilder,
   };
-});
 
 vi.mock('./src/validation/validator.js', () => {
   class MockValidator {
@@ -40,7 +38,6 @@ vi.mock('./src/validation/validator.js', () => {
       this.validated.push(input);
       return { ok: true, input };
     }
-  }
 
   const validateDataMock = vi.fn((data: unknown) => {
     if (data === 'throw') {
@@ -53,7 +50,6 @@ vi.mock('./src/validation/validator.js', () => {
     Validator: MockValidator,
     validateData: validateDataMock,
   };
-});
 
 vi.mock('./src/validation/middleware.js', () => {
   class MockValidationMiddleware {
@@ -67,7 +63,6 @@ vi.mock('./src/validation/middleware.js', () => {
     handle(_input: unknown): string {
       return 'handled';
     }
-  }
 
   let globalInstance: MockValidationMiddleware | null = null;
 
@@ -87,12 +82,7 @@ vi.mock('./src/validation/middleware.js', () => {
     getGlobalMiddleware: getGlobalMiddlewareMock,
     resetGlobalMiddleware: resetGlobalMiddlewareMock,
   };
-});
 
-describe('validation/index re-exports', () => {
-  beforeEach((): void => {
-    // No-op setup; ensure clean calls per test
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -107,31 +97,17 @@ describe('validation/index re-exports', () => {
       expect(ValidationLevel).toHaveProperty('LOW', 'low');
       expect(ValidationLevel).toHaveProperty('HIGH', 'high');
     });
-  });
 
-  describe('SchemaBuilder', () => {
-      const builder = new SchemaBuilder(schemaInput);
-      const built = builder.build();
-      expect(built).toEqual(schemaInput);
-    });
 
       expect(() => new SchemaBuilder(badSchema)).toThrowError('invalid schema');
     });
-  });
 
-  describe('Validator class', () => {
-      expect(result).toEqual({ ok: true, input: { a: 1 } });
-    });
 
     test('should throw when validate encounters bad input (error case)', (): void => {
       const validator = new Validator();
       expect(() => validator.validate('bad-validate')).toThrowError('validate error');
     });
-  });
 
-  describe('validateData function', () => {
-      const result = validateData(input);
-      expect(result).toEqual({ success: true, value: input });
       expect(validateData).toHaveBeenCalledTimes(1);
       expect(validateData).toHaveBeenCalledWith(input);
     });
@@ -139,10 +115,7 @@ describe('validation/index re-exports', () => {
     test('should throw error for invalid input (error case)', (): void => {
       expect(() => validateData('throw')).toThrowError('validation failed');
     });
-  });
 
-  describe('ValidationMiddleware class', () => {
-      const handled = mw.handle({ payload: true });
       expect(handled).toBe('handled');
       expect(mw.options).toEqual({ mode: 'strict' });
     });
@@ -152,7 +125,6 @@ describe('validation/index re-exports', () => {
         'middleware options invalid'
       );
     });
-  });
 
   describe('Global middleware functions', () => {
     test('should get a singleton global middleware (happy path)', (): void => {
@@ -178,5 +150,3 @@ describe('validation/index re-exports', () => {
       expect(afterReset).not.toBe(beforeReset);
       expect(getGlobalMiddleware).toHaveBeenCalledTimes(2);
     });
-  });
-});

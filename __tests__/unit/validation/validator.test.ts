@@ -10,32 +10,6 @@ vi.mock('./schemas.js', (): Record<string, unknown> => ({
   },
 }));
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let schema: ValidationSchema;
-
-  beforeEach((): void => {
-    schema = {
-      rules: [
-        {
-          field: 'name',
-          type: 'string',
-          required: true,
-          minLength: 2,
-          maxLength: 10,
-        } as ValidationRule,
-        {
-          field: 'email',
-          type: 'email',
-          required: true,
-        } as ValidationRule,
-      ],
-      allowUnknownFields: false,
-      level: ValidationLevel.Strict as unknown as ValidationSchema['level'],
-    } as ValidationSchema;
-
-    validator = new Validator(schema);
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -54,17 +28,7 @@ describe('Validator', (): void => {
       const s2 = validator.getSchema();
       expect(s1).not.toBe(s2);
     });
-  });
 
-  describe('validate', (): void => {
-      const result = validator.validate(data);
-      expect(result.valid).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result.warnings).toEqual([]);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized?.['name']).toBe('Alice');
-      expect(result.sanitized?.['email']).toBe('alice@example.com');
-    });
 
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
@@ -230,13 +194,11 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeDefined();
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'opt')).toBe(false);
     });
-  });
 
   describe('getLevel', (): void => {
     test('should return current validation level', (): void => {
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should update validation level', (): void => {
@@ -250,11 +212,7 @@ describe('Validator', (): void => {
       // Validator's internal level should remain unchanged
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
-});
 
-describe('validateData (helper)', (): void => {
-    const ok = validateData({ name: 'Neo' }, schema);
     expect(ok.valid).toBe(true);
     expect(ok.errors.length).toBe(0);
     expect(ok.sanitized?.['name']).toBe('Neo');
@@ -263,4 +221,3 @@ describe('validateData (helper)', (): void => {
     expect(bad.valid).toBe(false);
     expect(bad.errors[0]?.rule).toBe('required');
   });
-});

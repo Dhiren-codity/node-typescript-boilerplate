@@ -1,221 +1,309 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ValidationMiddleware, getGlobalMiddleware, resetGlobalMiddleware } from './middleware.js';
 
-// Track constructed mock validator instances
-interface MockValidator {
-  validate: (...args: unknown[]) => unknown;
-}
-const createdValidatorInstances: MockValidator[] = [];
-
-vi.mock('../src/validation/validator.js', (): Record<string, unknown> => {
-  return {
-    Validator: vi.fn().mockImplementation((_schema: unknown) => {
-      const instance: MockValidator = {
-        validate: vi.fn(),
+vi.mock('./validator.js', (): Record<string, unknown> => {
+  class MockValidator {
+    private schema: Record<string, unknown>;
+    constructor(schema: Record<string, unknown>) {
+      this.schema = schema;
+    }
+    validate(data: Record<string, unknown>): {
+      valid: boolean;
+      errors: { field: string; message: string }[];
+      sanitized: Record<string, unknown>;
+    } {
+      const schemaAny = this.schema as Record<string, unknown>;
+      const rulesRaw = schemaAny.rules as unknown;
+      const rules = Array.isArray(rulesRaw)
+        ? (rulesRaw as { field: string; required?: boolean }[])
+        : [];
+      const dataObj = data as Record<string, unknown>;
+      const errors: { field: string; message: string }[] = [];
+      for (const rule of rules) {
+        const val = dataObj[rule.field];
+        if (rule.required && (val === undefined || val === null)) {
+          errors.push({ field: rule.field, message: 'Required' });
+        }
+      }
+      return {
+        valid: errors.length === 0,
+        errors,
+        sanitized: { ...dataObj },
       };
-      createdValidatorInstances.push(instance);
-      return instance;
-    }),
-  };
+    }
+  }
+  return { Validator: MockValidator };
+});
 
-import type { ValidationResult, ValidationSchema } from '../src/validation/schemas.js';
-import { ValidationMiddleware, getGlobalMiddleware, resetGlobalMiddleware } from '../src/validation/middleware.js';
-import { Validator } from '../src/validation/validator.js';
+describe('ValidationMiddleware', (): void => {
+  let middleware: ValidationMiddleware;
 
+  beforeEach((): void => {
+    middleware = new ValidationMiddleware();
+  });
 
   afterEach((): void => {
-    createdValidatorInstances.length = 0;
-    vi.clearAllMocks();
+    middleware.clearAll();
     resetGlobalMiddleware();
   });
 
   describe('constructor', (): void => {
-    test('should initialize with empty registries', (): void => {
+    test('should initialize with empty schema registry', (): void => {
+      expect(middleware).toBeDefined();
       expect(middleware.getSchemaCount()).toBe(0);
       expect(middleware.getSchemaNames()).toEqual([]);
-      expect(middleware.getSchema('unknown')).toBeUndefined();
+    });
+  });
+
+  describe('registerSchema', (): void => {
+    test('should register schema and create validator', (): void => {
+      const schema = {
+        rules: [{ field: 'name', required: true }],
+      };
+      middleware.registerSchema('user', schema);
+      expect(middleware.getSchema('user')).toBe(schema);
+      expect(middleware.getSchemaCount()).toBe(1);
+
+      const result = middleware.validateWithSchema('user', { name: 'Alice' });
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.sanitized).toEqual({ name: 'Alice' });
     });
 
+    test('should overwrite existing schema with same name', (): void => {
+      const first = { rules: [{ field: 'one', required: true }] };
+      const second = { rules: [{ field: 'two', required: true }] };
+      middleware.registerSchema('dup', first);
+      middleware.registerSchema('dup', second);
 
+      const output = middleware.validateWithSchema(
+        'dup',
+        { one: 'ok', two: 'ok', extra: 1 },
+        { stripUnknown: true },
+      );
+      expect(output.valid).toBe(true);
+      expect(output.errors).toEqual([]);
+      // Only 'two' should remain because the second schema overwrote the first
+      expect(output.sanitized).toEqual({ two: 'ok' });
+    });
+  });
 
-    test('should return false when unregistering non-existent schema', (): void => {
-      const deleted = middleware.unregisterSchema('missing');
-      expect(deleted).toBe(false);
+  describe('unregisterSchema', (): void => {
+    test('should unregister existing schema and return true', (): void => {
+      const schema = { rules: [{ field: 'name', required: true }] };
+      middleware.registerSchema('user', schema);
+
+      const removed = middleware.unregisterSchema('user');
+      expect(removed).toBe(true);
+      expect(middleware.getSchema('user')).toBeUndefined();
+      expect(middleware.getSchemaCount()).toBe(0);
+
+      expect(() => middleware.validateWithSchema('user', { name: 'A' })).toThrow(
+        "Schema 'user' not found",
+      );
     });
 
-
-    test('should return undefined for unknown schema', (): void => {
-      expect(middleware.getSchema('nope')).toBeUndefined();
+    test('should return false when schema does not exist', (): void => {
+      const removed = middleware.unregisterSchema('missing');
+      expect(removed).toBe(false);
     });
+  });
+
+  describe('getSchema', (): void => {
+    test('should return registered schema by name', (): void => {
+      const schema = { rules: [{ field: 'id' }] };
+      middleware.registerSchema('get', schema);
+      expect(middleware.getSchema('get')).toBe(schema);
+    });
+
+    test('should return undefined for missing schema', (): void => {
+      expect(middleware.getSchema('none')).toBeUndefined();
+    });
+  });
 
   describe('validateWithSchema', (): void => {
     test('should throw when schema not found', (): void => {
-      expect((): void => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        middleware.validateWithSchema('unknown', {});
-      }).toThrowError("Schema 'unknown' not found");
+      expect(() => middleware.validateWithSchema('unknown', {})).toThrow(
+        "Schema 'unknown' not found",
+      );
     });
 
-      middleware.registerSchema('s', schema);
+    test('should validate data successfully', (): void => {
+      const schema = {
+        rules: [
+          { field: 'id', required: true },
+          { field: 'name', required: true },
+          { field: 'age' },
+        ],
+      };
+      middleware.registerSchema('user', schema);
 
-      const resultObj = {
-        valid: false,
-        errors: [{ message: 'e1' }, { message: 'e2' }],
-        sanitized: { a: 1, b: 2, c: 3 },
-      } as unknown as ValidationResult;
-
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
-
-      const returned = middleware.validateWithSchema('s', { a: 1, b: 2, c: 3 });
-      expect(returned).toBe(resultObj);
-      expect(returned).toEqual(resultObj);
+      const result = middleware.validateWithSchema('user', {
+        id: 1,
+        name: 'Alice',
+        age: 30,
+      });
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.sanitized).toEqual({ id: 1, name: 'Alice', age: 30 });
     });
 
-      middleware.registerSchema('s', schema);
+    test('should apply abortEarly option and keep only first error', (): void => {
+      const schema = {
+        rules: [
+          { field: 'id', required: true },
+          { field: 'name', required: true },
+        ],
+      };
+      middleware.registerSchema('user', schema);
 
-      const resultObj = {
-        valid: false,
-        errors: [{ message: 'first' }, { message: 'second' }, { message: 'third' }],
-        sanitized: { a: 1 },
-      } as unknown as ValidationResult;
+      const resultNoAbort = middleware.validateWithSchema('user', {});
+      expect(resultNoAbort.valid).toBe(false);
+      expect(resultNoAbort.errors.length).toBe(2);
 
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
-
-      const returned = middleware.validateWithSchema('s', { a: 1 }, { abortEarly: true });
-      expect(returned.errors).toHaveLength(1);
-      expect(returned.errors[0]).toEqual({ message: 'first' });
+      const resultAbort = middleware.validateWithSchema('user', {}, { abortEarly: true });
+      expect(resultAbort.valid).toBe(false);
+      expect(resultAbort.errors.length).toBe(1);
     });
 
-      middleware.registerSchema('s', schema);
+    test('should strip unknown fields when option enabled', (): void => {
+      const schema = {
+        rules: [
+          { field: 'id', required: true },
+          { field: 'name', required: true },
+        ],
+      };
+      middleware.registerSchema('user', schema);
 
-      const resultObj = {
-        valid: true,
-        errors: [],
-        sanitized: { a: 1, b: 2, c: 3, d: 4 },
-      } as unknown as ValidationResult;
+      const result = middleware.validateWithSchema(
+        'user',
+        { id: 1, name: 'Alice', extra: 'remove-me' },
+        { stripUnknown: true },
+      );
 
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.sanitized).toEqual({ id: 1, name: 'Alice' });
+    });
+  });
 
-      const returned = middleware.validateWithSchema('s', { a: 1, b: 2, c: 3, d: 4 }, { stripUnknown: true });
-      expect(returned.sanitized).toEqual({ a: 1, b: 2 });
+  describe('createMiddleware', (): void => {
+    test('should create a middleware function that validates with options', (): void => {
+      const schema = {
+        rules: [
+          { field: 'first', required: true },
+          { field: 'second', required: true },
+        ],
+      };
+      middleware.registerSchema('pair', schema);
+
+      const fn = middleware.createMiddleware('pair', { abortEarly: true });
+      const result = fn({});
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBe(1);
     });
 
-      middleware.registerSchema('s', schema);
-
-      const resultObj = {
-        valid: true,
-        errors: [],
-        sanitized: undefined,
-      } as unknown as ValidationResult;
-
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
-
-      const returned = middleware.validateWithSchema('s', { a: 1 }, { stripUnknown: true });
-      expect(returned.sanitized).toBeUndefined();
+    test('should throw when middleware is called with missing schema', (): void => {
+      const fn = middleware.createMiddleware('missing');
+      expect(() => fn({})).toThrow("Schema 'missing' not found");
     });
-
-      middleware.registerSchema('s', schema);
-
-      const resultObj = {
-        valid: false,
-        errors: [{ message: 'only' }, { message: 'ignored' }],
-        sanitized: { x: 'ok', y: 'ok', z: 'remove' },
-      } as unknown as ValidationResult;
-
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
-
-      const returned = middleware.validateWithSchema('s', { x: 'ok', y: 'ok', z: 'remove' }, { abortEarly: true, stripUnknown: true });
-      expect(returned.errors).toHaveLength(1);
-      expect(returned.sanitized).toEqual({ x: 'ok', y: 'ok' });
-    });
-
-
-      const mock = createdValidatorInstances[0];
-      (mock.validate as unknown as ReturnType<typeof vi.fn>).mockReturnValue(resultObj);
-
-      const mwFn = middleware.createMiddleware('s', { stripUnknown: true });
-      const returned = mwFn({ a: 1, b: 2, c: 3 });
-
-      expect(returned.valid).toBe(true);
-      expect(returned.sanitized).toEqual({ a: 1, b: 2 });
-    });
+  });
 
   describe('batchValidate', (): void => {
+    test('should validate multiple data sets and return results', (): void => {
+      const schema = {
+        rules: [{ field: 'name', required: true }],
+      };
+      middleware.registerSchema('multi', schema);
+
+      const results = middleware.batchValidate('multi', [{ name: 'A' }, { missing: true }]);
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBe(2);
+      expect(results[0].valid).toBe(true);
+      expect(results[1].valid).toBe(false);
+      expect(results[1].errors.length).toBe(1);
+    });
+
     test('should throw when schema not found', (): void => {
-      expect((): void => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        middleware.batchValidate('missing', [{}, {}]);
-      }).toThrowError("Schema 'missing' not found");
+      expect(() => middleware.batchValidate('none', [{}])).toThrow("Schema 'none' not found");
+    });
+  });
+
+  describe('batchValidationPassed', (): void => {
+    test('should return true when all validations passed', (): void => {
+      const schema = { rules: [{ field: 'name', required: true }] };
+      middleware.registerSchema('b', schema);
+      const results = middleware.batchValidate('b', [{ name: 'A' }, { name: 'B' }]);
+      const passed = middleware.batchValidationPassed(results);
+      expect(passed).toBe(true);
     });
 
-      middleware.registerSchema('s', schema);
-
-      const r1 = { valid: true, errors: [], sanitized: { a: 1 } } as unknown as ValidationResult;
-      const r2 = { valid: false, errors: [{ message: 'bad' }], sanitized: { a: 2 } } as unknown as ValidationResult;
-
-      const mock = createdValidatorInstances[0];
-      const validateFn = mock.validate as unknown as ReturnType<typeof vi.fn>;
-      validateFn.mockImplementationOnce((_d: unknown) => r1).mockImplementationOnce((_d: unknown) => r2);
-
-      const dataArray: Record<string, unknown>[] = [{ a: 1 }, { a: 2 }];
-      const results = middleware.batchValidate('s', dataArray);
-
-      expect(results).toEqual([r1, r2]);
-      expect(validateFn).toHaveBeenCalledTimes(2);
-      expect(validateFn).toHaveBeenNthCalledWith(1, { a: 1 });
-      expect(validateFn).toHaveBeenNthCalledWith(2, { a: 2 });
+    test('should return false when any validation failed', (): void => {
+      const schema = { rules: [{ field: 'name', required: true }] };
+      middleware.registerSchema('b2', schema);
+      const results = middleware.batchValidate('b2', [{ name: 'A' }, {}]);
+      const passed = middleware.batchValidationPassed(results);
+      expect(passed).toBe(false);
     });
+  });
 
-      ];
-      expect(middleware.batchValidationPassed(allValid)).toBe(true);
-    });
-
-        { valid: false, errors: [{ message: 'x' }], sanitized: {} } as unknown as ValidationResult,
-      ];
-      expect(middleware.batchValidationPassed(mixed)).toBe(false);
-    });
-
-      middleware.registerSchema('first', s1);
-      middleware.registerSchema('second', s2);
+  describe('getSchemaNames and getSchemaCount', (): void => {
+    test('should return all registered schema names and count', (): void => {
+      const s1 = { rules: [{ field: 'a' }] };
+      const s2 = { rules: [{ field: 'b' }] };
+      middleware.registerSchema('s1', s1);
+      middleware.registerSchema('s2', s2);
 
       const names = middleware.getSchemaNames();
-      expect(names).toContain('first');
-      expect(names).toContain('second');
-      expect(names.length).toBe(2);
-    });
-
-  describe('getSchemaCount', (): void => {
-    test('should return total number of registered schemas', (): void => {
-      expect(middleware.getSchemaCount()).toBe(0);
-      middleware.registerSchema('a', { rules: [{ field: 'a' }] } as unknown as ValidationSchema);
-      middleware.registerSchema('b', { rules: [{ field: 'b' }] } as unknown as ValidationSchema);
+      expect(names).toEqual(expect.arrayContaining(['s1', 's2']));
       expect(middleware.getSchemaCount()).toBe(2);
     });
+  });
 
+  describe('clearAll', (): void => {
+    test('should clear all schemas and validators', (): void => {
+      middleware.registerSchema('one', { rules: [{ field: 'x' }] });
+      middleware.registerSchema('two', { rules: [{ field: 'y' }] });
       expect(middleware.getSchemaCount()).toBe(2);
 
       middleware.clearAll();
       expect(middleware.getSchemaCount()).toBe(0);
       expect(middleware.getSchemaNames()).toEqual([]);
 
-      expect((): void => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        middleware.validateWithSchema('a', {});
-      }).toThrowError("Schema 'a' not found");
+      expect(() => middleware.validateWithSchema('one', {})).toThrow("Schema 'one' not found");
+      expect(() => middleware.validateWithSchema('two', {})).toThrow("Schema 'two' not found");
     });
+  });
+});
 
+describe('Global middleware instance', (): void => {
+  beforeEach((): void => {
+    resetGlobalMiddleware();
+  });
+
+  afterEach((): void => {
+    resetGlobalMiddleware();
+  });
 
   describe('getGlobalMiddleware', (): void => {
-    test('should return a singleton instance', (): void => {
-      const inst1 = getGlobalMiddleware();
-      const inst2 = getGlobalMiddleware();
-      expect(inst1).toBe(inst2);
+    test('should return a singleton instance across calls', (): void => {
+      const a = getGlobalMiddleware();
+      const b = getGlobalMiddleware();
+      expect(a).toBe(b);
 
-      inst1.registerSchema('g1', { rules: [{ field: 'x' }] } as unknown as ValidationSchema);
-      expect(inst2.getSchemaNames()).toContain('g1');
+      a.registerSchema('globalSchema', { rules: [{ field: 'name', required: true }] });
+      expect(b.getSchemaCount()).toBe(1);
+      expect(b.getSchema('globalSchema')).toBeDefined();
     });
+  });
 
+  describe('resetGlobalMiddleware', (): void => {
+    test('should reset and create a new global instance', (): void => {
+      const a = getGlobalMiddleware();
+      resetGlobalMiddleware();
+      const b = getGlobalMiddleware();
+      expect(a).not.toBe(b);
+      expect(b.getSchemaCount()).toBe(0);
+    });
+  });
+});

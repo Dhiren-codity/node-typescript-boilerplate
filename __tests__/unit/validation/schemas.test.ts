@@ -1,242 +1,330 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { SchemaBuilder, ValidationLevel } from './schemas';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { SchemaBuilder, ValidationLevel } from '../../src/validation/schemas';
 
+describe('SchemaBuilder', (): void => {
+  let builder: SchemaBuilder;
 
+  beforeEach((): void => {
+    builder = new SchemaBuilder('TestSchema');
+  });
 
-    test('should initialize with default level and no rules', (): void => {
+  afterEach((): void => {
+    vi.restoreAllMocks();
+  });
+
+  describe('constructor', (): void => {
+    test('should initialize with defaults correctly', (): void => {
       const schema = builder.build();
+      expect(schema).toBeDefined();
       expect(schema.name).toBe('TestSchema');
       expect(schema.level).toBe(ValidationLevel.Moderate);
       expect(schema.rules).toEqual([]);
       expect(schema.allowUnknownFields).toBe(false);
     });
 
-    test('should initialize with a custom level', (): void => {
-      const instance = new SchemaBuilder('CustomLevel', ValidationLevel.Strict);
-      const schema = instance.build();
+    test('should allow setting initial validation level', (): void => {
+      const local = new SchemaBuilder('WithLevel', ValidationLevel.Strict);
+      const schema = local.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
-      expect(schema.name).toBe('CustomLevel');
     });
+  });
 
-    test('should not throw when creating with empty name', (): void => {
-      expect((): SchemaBuilder => new SchemaBuilder('')).toBeDefined();
-    });
+  describe('addRule', (): void => {
+    test('should add a generic rule and preserve customValidator', (): void => {
+      const customValidator = (value: unknown): boolean => typeof value === 'string';
+      builder.addRule({
+        field: 'username',
+        type: 'string',
+        required: true,
+        minLength: 3,
+        maxLength: 20,
+        pattern: /^[a-z0-9_]+$/i,
+        customValidator,
+        errorMessage: 'Invalid username',
+      });
 
-
-      builder.addRule({ field: 'b', type: 'number', required: false, min: 0 });
-      builder.addRule({ field: 'c', type: 'boolean', required: true });
       const schema = builder.build();
-      expect(schema.rules.map((r) => r.field)).toEqual(['a', 'b', 'c']);
-    });
-
-
-    test('should add an optional string field without options', (): void => {
-      builder.stringField('desc', false);
-      const schema = builder.build();
+      expect(schema.rules).toHaveLength(1);
       const rule = schema.rules[0];
-      expect(rule.field).toBe('desc');
+      expect(rule.field).toBe('username');
       expect(rule.type).toBe('string');
-      expect(rule.required).toBe(false);
-      expect(rule.minLength).toBeUndefined();
-      expect(rule.maxLength).toBeUndefined();
-      expect(rule.pattern).toBeUndefined();
-      expect(rule.errorMessage).toBeUndefined();
+      expect(rule.required).toBe(true);
+      expect(rule.minLength).toBe(3);
+      expect(rule.maxLength).toBe(20);
+      expect(rule.pattern?.test('User_123')).toBe(true);
+      expect(rule.errorMessage).toBe('Invalid username');
+      expect(rule.customValidator).toBe(customValidator);
+      expect(rule.customValidator?.('abc')).toBe(true);
+      expect(rule.customValidator?.(123)).toBe(false);
     });
 
-    test('should not throw when called without options', (): void => {
+    test('should not throw when adding unusual numeric constraints', (): void => {
       expect((): void => {
-        builder.stringField('plain');
+        builder.addRule({
+          field: 'age',
+          type: 'number',
+          required: false,
+          min: -1000,
+          max: 1_000_000,
+        });
       }).not.toThrow();
     });
+  });
 
-
-    test('should add an optional number field without options', (): void => {
-      builder.numberField('score', false);
+  describe('stringField', (): void => {
+    test('should add a required string field with options', (): void => {
+      builder.stringField('title', true, {
+        minLength: 5,
+        maxLength: 100,
+        pattern: /^[A-Z]/,
+        errorMessage: 'Title must start with uppercase',
+      });
       const schema = builder.build();
+      expect(schema.rules).toHaveLength(1);
       const rule = schema.rules[0];
-      expect(rule.field).toBe('score');
-      expect(rule.type).toBe('number');
-      expect(rule.required).toBe(false);
-      expect(rule.min).toBeUndefined();
-      expect(rule.max).toBeUndefined();
-      expect(rule.errorMessage).toBeUndefined();
+      expect(rule.field).toBe('title');
+      expect(rule.type).toBe('string');
+      expect(rule.required).toBe(true);
+      expect(rule.minLength).toBe(5);
+      expect(rule.maxLength).toBe(100);
+      expect(rule.pattern?.test('Hello')).toBe(true);
+      expect(rule.pattern?.test('hello')).toBe(false);
+      expect(rule.errorMessage).toBe('Title must start with uppercase');
     });
 
+    test('should default to required=true and handle no options', (): void => {
+      builder.stringField('name');
+      const { rules } = builder.build();
+      expect(rules).toHaveLength(1);
+      expect(rules[0].required).toBe(true);
+      expect(rules[0].minLength).toBeUndefined();
+      expect(rules[0].maxLength).toBeUndefined();
+      expect(rules[0].pattern).toBeUndefined();
+    });
+
+    test('should allow required=false', (): void => {
+      builder.stringField('nickname', false);
+      const { rules } = builder.build();
+      expect(rules[0].required).toBe(false);
+    });
+
+    test('should not throw with empty field name', (): void => {
+      expect((): void => {
+        builder.stringField('', true);
+      }).not.toThrow();
+    });
+  });
+
+  describe('numberField', (): void => {
+    test('should add a required number field with min/max', (): void => {
+      builder.numberField('age', true, { min: 0, max: 120, errorMessage: 'Invalid age' });
+      const { rules } = builder.build();
+      expect(rules).toHaveLength(1);
+      const rule = rules[0];
+      expect(rule.field).toBe('age');
+      expect(rule.type).toBe('number');
+      expect(rule.required).toBe(true);
+      expect(rule.min).toBe(0);
+      expect(rule.max).toBe(120);
+      expect(rule.errorMessage).toBe('Invalid age');
+    });
+
+    test('should allow required=false', (): void => {
+      builder.numberField('score', false, { min: 0, max: 100 });
+      const { rules } = builder.build();
+      expect(rules[0].required).toBe(false);
+    });
+
+    test('should not throw with negative min and large max', (): void => {
+      expect((): void => {
+        builder.numberField('temperature', true, { min: -273.15, max: 10_000 });
+      }).not.toThrow();
+    });
+  });
+
   describe('emailField', (): void => {
-    test('should add a required email field with default error message and pattern', (): void => {
+    test('should add an email field with default error message and regex pattern', (): void => {
       builder.emailField('email');
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('email');
+      const { rules } = builder.build();
+      expect(rules).toHaveLength(1);
+      const rule = rules[0];
       expect(rule.type).toBe('email');
       expect(rule.required).toBe(true);
       expect(rule.errorMessage).toBe('Invalid email format');
-      expect(rule.pattern).toBeInstanceOf(RegExp);
-      const pattern = rule.pattern as RegExp;
-      expect(pattern.test('user@example.com')).toBe(true);
-      expect(pattern.test('invalid-email')).toBe(false);
+      // Compare regex by string representation
+      expect(rule.pattern?.toString()).toBe('/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/');
     });
 
-    test('should allow custom error message for email field', (): void => {
-      builder.emailField('email', true, 'Bad email');
-      const schema = builder.build();
-      const rule = schema.rules[0];
+    test('should allow custom error message and required=false', (): void => {
+      builder.emailField('contactEmail', false, 'Bad email');
+      const { rules } = builder.build();
+      const rule = rules[0];
+      expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('Bad email');
     });
-
-    test('should add an optional email field', (): void => {
-      builder.emailField('emailOpt', false);
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.required).toBe(false);
-    });
+  });
 
   describe('urlField', (): void => {
-    test('should add a required url field with default error message', (): void => {
+    test('should add a url field with default error message', (): void => {
       builder.urlField('website');
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('website');
+      const { rules } = builder.build();
+      const rule = rules[0];
       expect(rule.type).toBe('url');
       expect(rule.required).toBe(true);
       expect(rule.errorMessage).toBe('Invalid URL format');
     });
 
-    test('should allow custom error message for url field and optionality', (): void => {
-      builder.urlField('websiteOpt', false, 'Bad url');
-      const schema = builder.build();
-      const rule = schema.rules[0];
+    test('should allow custom error message and required=false', (): void => {
+      builder.urlField('homepage', false, 'URL not valid');
+      const { rules } = builder.build();
+      const rule = rules[0];
       expect(rule.required).toBe(false);
-      expect(rule.errorMessage).toBe('Bad url');
+      expect(rule.errorMessage).toBe('URL not valid');
     });
+  });
 
   describe('booleanField', (): void => {
     test('should add a required boolean field by default', (): void => {
       builder.booleanField('active');
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('active');
+      const { rules } = builder.build();
+      const rule = rules[0];
       expect(rule.type).toBe('boolean');
       expect(rule.required).toBe(true);
     });
 
-    test('should add an optional boolean field', (): void => {
-      builder.booleanField('flag', false);
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.required).toBe(false);
+    test('should allow required=false', (): void => {
+      builder.booleanField('subscribed', false);
+      const { rules } = builder.build();
+      expect(rules[0].required).toBe(false);
     });
+  });
 
   describe('arrayField', (): void => {
-    test('should add a required array field', (): void => {
-      builder.arrayField('items');
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('items');
+    test('should add an array field', (): void => {
+      builder.arrayField('tags');
+      const { rules } = builder.build();
+      const rule = rules[0];
       expect(rule.type).toBe('array');
       expect(rule.required).toBe(true);
     });
 
-    test('should add an optional array field', (): void => {
-      builder.arrayField('tags', false);
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.required).toBe(false);
+    test('should allow required=false', (): void => {
+      builder.arrayField('optionalTags', false);
+      const { rules } = builder.build();
+      expect(rules[0].required).toBe(false);
     });
+  });
 
   describe('objectField', (): void => {
-    test('should add a required object field', (): void => {
-      builder.objectField('meta');
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('meta');
+    test('should add an object field', (): void => {
+      builder.objectField('profile');
+      const { rules } = builder.build();
+      const rule = rules[0];
       expect(rule.type).toBe('object');
       expect(rule.required).toBe(true);
     });
 
-    test('should add an optional object field', (): void => {
-      builder.objectField('config', false);
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.required).toBe(false);
+    test('should allow required=false', (): void => {
+      builder.objectField('metadata', false);
+      const { rules } = builder.build();
+      expect(rules[0].required).toBe(false);
     });
+  });
 
   describe('allowUnknown', (): void => {
-    test('should enable allowUnknownFields when called with true', (): void => {
-      builder.allowUnknown(true);
-      const schema = builder.build();
+    test('should default to allowUnknownFields=false and set to true', (): void => {
+      let schema = builder.build();
+      expect(schema.allowUnknownFields).toBe(false);
+
+      builder.allowUnknown();
+      schema = builder.build();
       expect(schema.allowUnknownFields).toBe(true);
     });
 
-    test('should disable allowUnknownFields when called with false', (): void => {
+    test('should set allowUnknownFields explicitly to false', (): void => {
+      builder.allowUnknown(true);
+      let schema = builder.build();
+      expect(schema.allowUnknownFields).toBe(true);
+
       builder.allowUnknown(false);
-      const schema = builder.build();
+      schema = builder.build();
       expect(schema.allowUnknownFields).toBe(false);
     });
-
-    test('should default to true when called without arguments', (): void => {
-      builder.allowUnknown();
-      const schema = builder.build();
-      expect(schema.allowUnknownFields).toBe(true);
-    });
+  });
 
   describe('setLevel', (): void => {
-    test('should set validation level to Strict', (): void => {
+    test('should update validation level', (): void => {
       builder.setLevel(ValidationLevel.Strict);
-      const schema = builder.build();
+      let schema = builder.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
-    });
 
-    test('should not throw when setting an unknown level via cast (runtime)', (): void => {
-      // This tests runtime behavior; TypeScript would normally prevent invalid enum values.
-      const invalidLevel = 'unknown' as unknown as ValidationLevel;
-      expect((): void => {
-        builder.setLevel(invalidLevel);
-      }).not.toThrow();
-      const schema = builder.build();
-      expect(schema.level).toBe(invalidLevel);
+      builder.setLevel(ValidationLevel.Lenient);
+      schema = builder.build();
+      expect(schema.level).toBe(ValidationLevel.Lenient);
     });
+  });
 
   describe('build', (): void => {
-    test('should return a shallow copy of the schema object', (): void => {
-      builder.stringField('field1').allowUnknown().setLevel(ValidationLevel.Lenient);
-      const built1 = builder.build();
-      expect(built1.name).toBe('TestSchema');
-      expect(built1.level).toBe(ValidationLevel.Lenient);
-      expect(built1.allowUnknownFields).toBe(true);
-      expect(built1.rules).toHaveLength(1);
+    test('should return a shallow copy of schema (top-level object cloned)', (): void => {
+      builder.stringField('name');
+      const schemaA = builder.build();
+      const schemaB = builder.build();
 
-      // Mutate returned schema's top-level property and verify builder is unchanged
-      built1.name = 'Mutated';
-      const built2 = builder.build();
-      expect(built2.name).toBe('TestSchema');
+      expect(schemaA).not.toBe(schemaB);
+      expect(schemaA.rules).toBe(schemaB.rules);
     });
 
-    test('should share rules array reference (edge case: shallow copy)', (): void => {
-      builder.stringField('fieldA');
-      const built = builder.build();
-      expect(built.rules).toHaveLength(1);
+    test('mutating returned rules array should affect subsequent builds (shallow copy)', (): void => {
+      builder.stringField('name');
+      const schemaA = builder.build();
+      expect(schemaA.rules).toHaveLength(1);
 
-      // Mutate rules array on the built schema and check the builder reflects it
-      built.rules.push({ field: 'injected', type: 'number', required: true });
-      const after = builder.build();
-      expect(after.rules).toHaveLength(2);
-      expect(after.rules[1].field).toBe('injected');
+      schemaA.rules.push({ field: 'extra', type: 'string', required: true });
+      expect(schemaA.rules).toHaveLength(2);
+
+      const schemaB = builder.build();
+      // Because rules array is shared, the new rule should appear in subsequent builds
+      expect(schemaB.rules).toHaveLength(2);
+      const extra = schemaB.rules.find((r): boolean => r.field === 'extra')!;
+      expect(extra.type).toBe('string');
+      expect(extra.required).toBe(true);
     });
 
-    test('should work with no rules defined (edge case)', (): void => {
-      const empty = new SchemaBuilder('Empty');
-      const schema = empty.build();
-      expect(schema.rules).toEqual([]);
-    });
-
-        .emailField('email')
-        .allowUnknown()
+    test('should include all chained rules and settings', (): void => {
+      builder
+        .stringField('title', true)
+        .numberField('price', true, { min: 0 })
+        .booleanField('available', false)
+        .allowUnknown(true)
         .setLevel(ValidationLevel.Strict);
-      expect(returned).toBe(builder);
 
       const schema = builder.build();
-      expect(schema.rules.map((r) => r.field)).toEqual(['name', 'age', 'email']);
       expect(schema.level).toBe(ValidationLevel.Strict);
       expect(schema.allowUnknownFields).toBe(true);
+      expect(schema.rules).toHaveLength(3);
+      expect(schema.rules.map((r): string => r.field)).toEqual(['title', 'price', 'available']);
     });
+  });
+
+  describe('chaining and robustness', (): void => {
+    test('methods should be chainable (return this) and not throw', (): void => {
+      expect((): void => {
+        builder
+          .stringField('s1')
+          .numberField('n1', false, { min: -1, max: 1 })
+          .emailField('e1', false)
+          .urlField('u1', true, 'bad url')
+          .booleanField('b1', false)
+          .arrayField('a1')
+          .objectField('o1', false)
+          .allowUnknown(true)
+          .setLevel(ValidationLevel.Moderate);
+      }).not.toThrow();
+
+      const schema = builder.build();
+      expect(schema.rules).toHaveLength(7);
+      expect(schema.allowUnknownFields).toBe(true);
+      expect(schema.level).toBe(ValidationLevel.Moderate);
+    });
+  });
+});

@@ -1,6 +1,8 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel, type ValidationRule } from '../../src/validation/schemas';
 
+
+
 describe('SchemaBuilder', (): void => {
   let builder: SchemaBuilder;
 
@@ -30,17 +32,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule to schema', (): void => {
-      const customValidator = vi.fn((_value: unknown): boolean => true);
-      const rule: ValidationRule = {
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 18,
-        max: 99,
-        customValidator,
-        errorMessage: 'Age must be between 18 and 99',
-      };
 
       builder.addRule(rule);
       const schema = builder.build();
@@ -73,14 +64,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add a required string field with constraints', (): void => {
-      const pattern = /^[a-z]+$/i;
-      builder.stringField('username', true, {
-        minLength: 3,
-        maxLength: 20,
-        pattern,
-        errorMessage: 'Invalid username',
-      });
       const schema = builder.build();
 
       expect(schema.rules).toHaveLength(1);
@@ -108,8 +91,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add number field with min and max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 120, errorMessage: 'Invalid age' });
       const schema = builder.build();
 
       expect(schema.rules[0]).toEqual({
@@ -277,10 +258,6 @@ describe('SchemaBuilder', (): void => {
       expect(first).toEqual(second);
     });
 
-    test('should include all defined rules', (): void => {
-      builder
-        .stringField('username')
-        .numberField('age', true, { min: 0, max: 150 })
         .booleanField('active')
         .arrayField('tags', false)
         .objectField('profile');

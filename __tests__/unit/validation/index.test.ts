@@ -1,5 +1,28 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+
+vi.mock('./schemas.js', () => {
+  const ValidationLevel = { INFO: 'info', ERROR: 'error' } as const;
+
+  class SchemaBuilder {
+    public config: Record<string, unknown>;
+    constructor(config: Record<string, unknown> = {}) {
+vi.mock('./validator.js', () => {
+  class Validator {
+    public options: Record<string, unknown>;
+    constructor(options: Record<string, unknown> = {}) {
+vi.mock('./middleware.js', () => {
+  type MiddlewareFn = (input: unknown) => boolean;
+
+  const baseMiddleware: MiddlewareFn = vi.fn((_input: unknown) => true);
+  let currentGlobal: MiddlewareFn = baseMiddleware;
+
+  const ValidationMiddleware = baseMiddleware;
+  const getGlobalMiddleware = vi.fn((): MiddlewareFn => currentGlobal);
+  const resetGlobalMiddleware = vi.fn((): void => {
+    currentGlobal = baseMiddleware;
+  });
+
   ValidationLevel,
   SchemaBuilder,
   Validator,
@@ -9,12 +32,6 @@ import {
   resetGlobalMiddleware,
 } from './index';
 
-vi.mock('./schemas.js', () => {
-  const ValidationLevel = { INFO: 'info', ERROR: 'error' } as const;
-
-  class SchemaBuilder {
-    public config: Record<string, unknown>;
-    constructor(config: Record<string, unknown> = {}) {
       this.config = config;
     }
     build(): Record<string, unknown> {
@@ -28,10 +45,6 @@ vi.mock('./schemas.js', () => {
   };
 });
 
-vi.mock('./validator.js', () => {
-  class Validator {
-    public options: Record<string, unknown>;
-    constructor(options: Record<string, unknown> = {}) {
       this.options = options;
     }
     run(value: unknown): boolean {
@@ -47,17 +60,6 @@ vi.mock('./validator.js', () => {
   };
 });
 
-vi.mock('./middleware.js', () => {
-  type MiddlewareFn = (input: unknown) => boolean;
-
-  const baseMiddleware: MiddlewareFn = vi.fn((_input: unknown) => true);
-  let currentGlobal: MiddlewareFn = baseMiddleware;
-
-  const ValidationMiddleware = baseMiddleware;
-  const getGlobalMiddleware = vi.fn((): MiddlewareFn => currentGlobal);
-  const resetGlobalMiddleware = vi.fn((): void => {
-    currentGlobal = baseMiddleware;
-  });
 
   return {
     ValidationMiddleware,
@@ -81,8 +83,6 @@ describe('validation/index barrel exports', () => {
       expect(ValidationLevel).toEqual({ INFO: 'info', ERROR: 'error' });
     });
 
-    test('should re-export SchemaBuilder class and allow building schemas', (): void => {
-      const inputConfig: Record<string, unknown> = { required: true, min: 1 };
       const builder = new SchemaBuilder(inputConfig);
       const result = builder.build();
       expect(result).toEqual(inputConfig);
@@ -96,8 +96,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('validator.js re-exports', () => {
-    test('should re-export Validator class and run validation (happy path)', (): void => {
-      const validator = new Validator({ strict: true });
       const isValid = validator.run('value');
       expect(isValid).toBe(true);
       expect(validator.options).toEqual({ strict: true });
@@ -111,8 +109,6 @@ describe('validation/index barrel exports', () => {
       expect(isValidUndefined).toBe(false);
     });
 
-    test('should re-export validateData function and call underlying mock', (): void => {
-      const data: Record<string, unknown> = { name: 'Alice' };
       const result = validateData(data);
       expect(result).toBe(true);
       const validateMock = validateData as unknown as ReturnType<typeof vi.fn>;
@@ -120,11 +116,6 @@ describe('validation/index barrel exports', () => {
       expect(validateMock).toHaveBeenCalledWith(data);
     });
 
-    test('validateData propagates thrown errors from underlying mock', (): void => {
-      const validateMock = validateData as unknown as ReturnType<typeof vi.fn>;
-      validateMock.mockImplementationOnce((): boolean => {
-        throw new Error('boom');
-      });
 
       expect(() => validateData({})).toThrowError('boom');
     });
@@ -140,11 +131,6 @@ describe('validation/index barrel exports', () => {
       expect(mwMock).toHaveBeenCalledWith({ field: 'value' });
     });
 
-    test('ValidationMiddleware propagates thrown errors (error path)', (): void => {
-      const mwMock = ValidationMiddleware as unknown as ReturnType<typeof vi.fn>;
-      mwMock.mockImplementationOnce((): boolean => {
-        throw new Error('middleware failed');
-      });
 
       expect(() => ValidationMiddleware('input')).toThrowError('middleware failed');
     });

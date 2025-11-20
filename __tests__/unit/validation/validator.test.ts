@@ -10,6 +10,8 @@ vi.mock('./schemas.js', (): Record<string, unknown> => ({
   },
 }));
 
+
+
 describe('Validator', (): void => {
   let validator: Validator;
   let schema: {
@@ -55,18 +57,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate and sanitize valid data', (): void => {
-      const data: Record<string, unknown> = {
-        name: ' Alice ',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-        flag: true,
-        tags: ['t1', 't2'],
-        profile: { a: 1 },
-        code: 'ABC-123',
-        status: 'active',
-      };
 
       const result = validator.validate(data);
       expect(result.valid).toBe(true);
@@ -86,12 +76,6 @@ describe('Validator', (): void => {
       });
     });
 
-    test('should report required field missing', (): void => {
-      const data: Record<string, unknown> = {
-        age: 25,
-        code: 'ABC-123',
-        status: 'active',
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -105,25 +89,11 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should trim string fields', (): void => {
-      const data: Record<string, unknown> = {
-        name: ' Bob  ',
-        age: 20,
-        code: 'ABC-123',
-        status: 'inactive',
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(true);
       expect((result.sanitized as Record<string, unknown>).name).toBe('Bob');
     });
 
-    test('should validate string length boundaries (minLength, maxLength)', (): void => {
-      const tooShort: Record<string, unknown> = {
-        name: 'A',
-        age: 20,
-        code: 'ABC-123',
-        status: 'active',
-      };
       const shortRes = validator.validate(tooShort);
       expect(shortRes.valid).toBe(false);
       expect(shortRes.errors).toEqual(
@@ -147,13 +117,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should validate number range (min, max) including zero boundary', (): void => {
-      const belowMin: Record<string, unknown> = {
-        name: 'Ok',
-        age: -1,
-        code: 'ABC-123',
-        status: 'active',
-      };
       const belowRes = validator.validate(belowMin);
       expect(belowRes.valid).toBe(false);
       expect(belowRes.errors).toEqual(
@@ -186,13 +149,6 @@ describe('Validator', (): void => {
       expect(boundaryRes.valid).toBe(true);
     });
 
-    test('should validate pattern mismatch', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: 25,
-        code: 'abc-123',
-        status: 'active',
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -202,13 +158,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should handle custom validator failure', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: 25,
-        code: 'ABC-123',
-        status: 'pending',
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -218,20 +167,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should catch custom validator exceptions (catch)', (): void => {
-      const throwingSchema = {
-        ...schema,
-        rules: schema.rules.map((r) =>
-          r.field === 'status'
-            ? ({
-                ...r,
-                customValidator: (_val: unknown): boolean => {
-                  throw new Error('boom');
-                },
-              } as Record<string, unknown>)
-            : r,
-        ),
-      } as unknown as typeof schema;
 
       const throwingValidator = new Validator(
         throwingSchema as unknown as Record<string, unknown> as never,
@@ -256,15 +191,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should validate email and url types (switch branch coverage)', (): void => {
-      const validData: Record<string, unknown> = {
-        name: 'Ok',
-        age: 25,
-        email: 'user@example.com',
-        website: 'https://valid.example',
-        code: 'ABC-123',
-        status: 'active',
-      };
       const validRes = validator.validate(validData);
       expect(validRes.valid).toBe(true);
 
@@ -307,14 +233,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should treat unknown fields as errors in Strict mode', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: 20,
-        code: 'ABC-123',
-        status: 'active',
-        unknownField: 123,
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -326,11 +244,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should treat unknown fields as warnings in Permissive mode', (): void => {
-      const permissiveValidator = new Validator({
-        ...schema,
-        level: ValidationLevel.Permissive as unknown as ValidationLevelType,
-      } as unknown as Record<string, unknown> as never);
 
       const data: Record<string, unknown> = {
         name: 'Ok',
@@ -348,11 +261,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeDefined();
     });
 
-    test('should skip unknown field checks when allowUnknownFields is true', (): void => {
-      const allowUnknownSchema = {
-        ...schema,
-        allowUnknownFields: true,
-      } as unknown as typeof schema;
       const allowUnknownValidator = new Validator(
         allowUnknownSchema as unknown as Record<string, unknown> as never,
       );
@@ -370,13 +278,6 @@ describe('Validator', (): void => {
       expect(result.warnings).toHaveLength(0);
     });
 
-    test('should not sanitize number from string when type is number (type mismatch)', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: '42', // wrong type
-        code: 'ABC-123',
-        status: 'active',
-      };
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -385,15 +286,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should allow null when not required and omit from sanitized', (): void => {
-      const optionalSchema = {
-        ...schema,
-        rules: schema.rules.map((r) =>
-          r.field === 'email'
-            ? ({ ...r, required: false } as Record<string, unknown>)
-            : r,
-        ),
-      } as unknown as typeof schema;
       const optValidator = new Validator(
         optionalSchema as unknown as Record<string, unknown> as never,
       );
@@ -434,13 +326,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData function', (): void => {
-    test('should validate via helper and match class behavior', (): void => {
-      const data: Record<string, unknown> = {
-        name: ' Carol ',
-        age: 45,
-        code: 'ABC-123',
-        status: 'inactive',
-      };
 
       const viaClass = validator.validate(data);
       const viaHelper = validateData(data, schema as unknown as Record<string, unknown> as never);

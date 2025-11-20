@@ -110,23 +110,16 @@ describe('validation/index re-exports', () => {
   });
 
   describe('SchemaBuilder', () => {
-    test('should initialize and build schema (happy path)', (): void => {
-      const schemaInput: Record<string, unknown> = { field: 'value' };
       const builder = new SchemaBuilder(schemaInput);
       const built = builder.build();
       expect(built).toEqual(schemaInput);
     });
 
-    test('should throw on invalid schema (error case)', (): void => {
-      const badSchema: Record<string, unknown> = { invalid: true };
       expect(() => new SchemaBuilder(badSchema)).toThrowError('invalid schema');
     });
   });
 
   describe('Validator class', () => {
-    test('should initialize and validate data (happy path)', (): void => {
-      const validator = new Validator();
-      const result = validator.validate({ a: 1 });
       expect(result).toEqual({ ok: true, input: { a: 1 } });
     });
 
@@ -137,8 +130,6 @@ describe('validation/index re-exports', () => {
   });
 
   describe('validateData function', () => {
-    test('should call underlying function and return result (happy path)', (): void => {
-      const input = { id: 123 };
       const result = validateData(input);
       expect(result).toEqual({ success: true, value: input });
       expect(validateData).toHaveBeenCalledTimes(1);
@@ -151,8 +142,6 @@ describe('validation/index re-exports', () => {
   });
 
   describe('ValidationMiddleware class', () => {
-    test('should initialize and handle data (happy path)', (): void => {
-      const mw = new ValidationMiddleware({ mode: 'strict' });
       const handled = mw.handle({ payload: true });
       expect(handled).toBe('handled');
       expect(mw.options).toEqual({ mode: 'strict' });

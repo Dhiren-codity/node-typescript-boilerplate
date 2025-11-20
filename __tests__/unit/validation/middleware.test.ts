@@ -56,10 +56,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('registerSchema', (): void => {
-    test('should register schema and create validator', (): void => {
-      const schema = {
-        rules: [{ field: 'name', required: true }],
-      };
       middleware.registerSchema('user', schema);
       expect(middleware.getSchema('user')).toBe(schema);
       expect(middleware.getSchemaCount()).toBe(1);
@@ -70,8 +66,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ name: 'Alice' });
     });
 
-    test('should overwrite existing schema with same name', (): void => {
-      const first = { rules: [{ field: 'one', required: true }] };
       const second = { rules: [{ field: 'two', required: true }] };
       middleware.registerSchema('dup', first);
       middleware.registerSchema('dup', second);
@@ -89,8 +83,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('unregisterSchema', (): void => {
-    test('should unregister existing schema and return true', (): void => {
-      const schema = { rules: [{ field: 'name', required: true }] };
       middleware.registerSchema('user', schema);
 
       const removed = middleware.unregisterSchema('user');
@@ -110,8 +102,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('getSchema', (): void => {
-    test('should return registered schema by name', (): void => {
-      const schema = { rules: [{ field: 'id' }] };
       middleware.registerSchema('get', schema);
       expect(middleware.getSchema('get')).toBe(schema);
     });
@@ -128,14 +118,6 @@ describe('ValidationMiddleware', (): void => {
       );
     });
 
-    test('should validate data successfully', (): void => {
-      const schema = {
-        rules: [
-          { field: 'id', required: true },
-          { field: 'name', required: true },
-          { field: 'age' },
-        ],
-      };
       middleware.registerSchema('user', schema);
 
       const result = middleware.validateWithSchema('user', {
@@ -148,13 +130,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ id: 1, name: 'Alice', age: 30 });
     });
 
-    test('should apply abortEarly option and keep only first error', (): void => {
-      const schema = {
-        rules: [
-          { field: 'id', required: true },
-          { field: 'name', required: true },
-        ],
-      };
       middleware.registerSchema('user', schema);
 
       const resultNoAbort = middleware.validateWithSchema('user', {});
@@ -166,13 +141,6 @@ describe('ValidationMiddleware', (): void => {
       expect(resultAbort.errors.length).toBe(1);
     });
 
-    test('should strip unknown fields when option enabled', (): void => {
-      const schema = {
-        rules: [
-          { field: 'id', required: true },
-          { field: 'name', required: true },
-        ],
-      };
       middleware.registerSchema('user', schema);
 
       const result = middleware.validateWithSchema(
@@ -188,13 +156,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should create a middleware function that validates with options', (): void => {
-      const schema = {
-        rules: [
-          { field: 'first', required: true },
-          { field: 'second', required: true },
-        ],
-      };
       middleware.registerSchema('pair', schema);
 
       const fn = middleware.createMiddleware('pair', { abortEarly: true });
@@ -210,10 +171,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidate', (): void => {
-    test('should validate multiple data sets and return results', (): void => {
-      const schema = {
-        rules: [{ field: 'name', required: true }],
-      };
       middleware.registerSchema('multi', schema);
 
       const results = middleware.batchValidate('multi', [{ name: 'A' }, { missing: true }]);
@@ -230,16 +187,12 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all validations passed', (): void => {
-      const schema = { rules: [{ field: 'name', required: true }] };
       middleware.registerSchema('b', schema);
       const results = middleware.batchValidate('b', [{ name: 'A' }, { name: 'B' }]);
       const passed = middleware.batchValidationPassed(results);
       expect(passed).toBe(true);
     });
 
-    test('should return false when any validation failed', (): void => {
-      const schema = { rules: [{ field: 'name', required: true }] };
       middleware.registerSchema('b2', schema);
       const results = middleware.batchValidate('b2', [{ name: 'A' }, {}]);
       const passed = middleware.batchValidationPassed(results);
@@ -248,8 +201,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('getSchemaNames and getSchemaCount', (): void => {
-    test('should return all registered schema names and count', (): void => {
-      const s1 = { rules: [{ field: 'a' }] };
       const s2 = { rules: [{ field: 'b' }] };
       middleware.registerSchema('s1', s1);
       middleware.registerSchema('s2', s2);
@@ -261,8 +212,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('clearAll', (): void => {
-    test('should clear all schemas and validators', (): void => {
-      middleware.registerSchema('one', { rules: [{ field: 'x' }] });
       middleware.registerSchema('two', { rules: [{ field: 'y' }] });
       expect(middleware.getSchemaCount()).toBe(2);
 

@@ -30,18 +30,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a generic rule and preserve customValidator', (): void => {
-      const customValidator = (value: unknown): boolean => typeof value === 'string';
-      builder.addRule({
-        field: 'username',
-        type: 'string',
-        required: true,
-        minLength: 3,
-        maxLength: 20,
-        pattern: /^[a-z0-9_]+$/i,
-        customValidator,
-        errorMessage: 'Invalid username',
-      });
 
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
@@ -72,13 +60,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add a required string field with options', (): void => {
-      builder.stringField('title', true, {
-        minLength: 5,
-        maxLength: 100,
-        pattern: /^[A-Z]/,
-        errorMessage: 'Title must start with uppercase',
-      });
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
       const rule = schema.rules[0];
@@ -92,9 +73,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.errorMessage).toBe('Title must start with uppercase');
     });
 
-    test('should default to required=true and handle no options', (): void => {
-      builder.stringField('name');
-      const { rules } = builder.build();
       expect(rules).toHaveLength(1);
       expect(rules[0].required).toBe(true);
       expect(rules[0].minLength).toBeUndefined();
@@ -102,9 +80,6 @@ describe('SchemaBuilder', (): void => {
       expect(rules[0].pattern).toBeUndefined();
     });
 
-    test('should allow required=false', (): void => {
-      builder.stringField('nickname', false);
-      const { rules } = builder.build();
       expect(rules[0].required).toBe(false);
     });
 
@@ -116,8 +91,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a required number field with min/max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 120, errorMessage: 'Invalid age' });
       const { rules } = builder.build();
       expect(rules).toHaveLength(1);
       const rule = rules[0];
@@ -129,8 +102,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.errorMessage).toBe('Invalid age');
     });
 
-    test('should allow required=false', (): void => {
-      builder.numberField('score', false, { min: 0, max: 100 });
       const { rules } = builder.build();
       expect(rules[0].required).toBe(false);
     });
@@ -143,9 +114,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('emailField', (): void => {
-    test('should add an email field with default error message and regex pattern', (): void => {
-      builder.emailField('email');
-      const { rules } = builder.build();
       expect(rules).toHaveLength(1);
       const rule = rules[0];
       expect(rule.type).toBe('email');
@@ -155,9 +123,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.pattern?.toString()).toBe('/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/');
     });
 
-    test('should allow custom error message and required=false', (): void => {
-      builder.emailField('contactEmail', false, 'Bad email');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('Bad email');
@@ -165,18 +130,12 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('urlField', (): void => {
-    test('should add a url field with default error message', (): void => {
-      builder.urlField('website');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.type).toBe('url');
       expect(rule.required).toBe(true);
       expect(rule.errorMessage).toBe('Invalid URL format');
     });
 
-    test('should allow custom error message and required=false', (): void => {
-      builder.urlField('homepage', false, 'URL not valid');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('URL not valid');
@@ -184,49 +143,31 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('booleanField', (): void => {
-    test('should add a required boolean field by default', (): void => {
-      builder.booleanField('active');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.type).toBe('boolean');
       expect(rule.required).toBe(true);
     });
 
-    test('should allow required=false', (): void => {
-      builder.booleanField('subscribed', false);
-      const { rules } = builder.build();
       expect(rules[0].required).toBe(false);
     });
   });
 
   describe('arrayField', (): void => {
-    test('should add an array field', (): void => {
-      builder.arrayField('tags');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.type).toBe('array');
       expect(rule.required).toBe(true);
     });
 
-    test('should allow required=false', (): void => {
-      builder.arrayField('optionalTags', false);
-      const { rules } = builder.build();
       expect(rules[0].required).toBe(false);
     });
   });
 
   describe('objectField', (): void => {
-    test('should add an object field', (): void => {
-      builder.objectField('profile');
-      const { rules } = builder.build();
       const rule = rules[0];
       expect(rule.type).toBe('object');
       expect(rule.required).toBe(true);
     });
 
-    test('should allow required=false', (): void => {
-      builder.objectField('metadata', false);
-      const { rules } = builder.build();
       expect(rules[0].required).toBe(false);
     });
   });
@@ -290,10 +231,6 @@ describe('SchemaBuilder', (): void => {
       expect(extra.required).toBe(true);
     });
 
-    test('should include all chained rules and settings', (): void => {
-      builder
-        .stringField('title', true)
-        .numberField('price', true, { min: 0 })
         .booleanField('available', false)
         .allowUnknown(true)
         .setLevel(ValidationLevel.Strict);

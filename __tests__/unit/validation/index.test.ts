@@ -105,8 +105,6 @@ describe('src/validation/index re-exports', () => {
       expect(SchemaBuilder).toBe(MockedSchemaBuilder);
     });
 
-    test('should construct and build as mocked', (): void => {
-      const builder = new SchemaBuilder('input') as unknown as { build: () => string };
       const output = builder.build();
       expect(output).toBe('built:input');
     });
@@ -117,11 +115,6 @@ describe('src/validation/index re-exports', () => {
       expect(Validator).toBe(MockedValidator);
     });
 
-    test('should validate and record calls as mocked', (): void => {
-      const instance = new Validator() as unknown as {
-        validate: (data: unknown) => string;
-        validateCalledWith: unknown[] | null;
-      };
       const result = instance.validate({ key: 'value' });
       expect(result).toBe('ok');
       expect(instance.validateCalledWith).toEqual([{ key: 'value' }]);
@@ -173,11 +166,6 @@ describe('src/validation/index re-exports', () => {
       expect(middlewareInstance.calls).toEqual(['event-a']);
     });
 
-    test('should reset global middleware state', (): void => {
-      const instanceBefore = getGlobalMiddleware() as unknown as {
-        use: (input: unknown) => void;
-        calls: unknown[];
-      };
       instanceBefore.use('event-b');
       expect(instanceBefore.calls).toEqual(['event-b']);
 

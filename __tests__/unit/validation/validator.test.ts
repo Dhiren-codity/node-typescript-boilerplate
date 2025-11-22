@@ -9,6 +9,8 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
   },
 }));
 
+
+
 describe('Validator', (): void => {
   let validator: Validator;
 
@@ -52,55 +54,35 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate valid string and sanitize by trimming', (): void => {
-      const result = validator.validate({ name: '  Alice  ' });
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
       expect(result.warnings).toEqual([]);
       expect(result.sanitized).toEqual({ name: 'Alice' });
     });
 
-    test('should fail when required field is missing', (): void => {
-      const result = validator.validate({});
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBe(1);
       expect(result.errors[0]?.rule).toBe('required');
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should fail when required field is null', (): void => {
-      const result = validator.validate({ name: null });
       expect(result.valid).toBe(false);
       expect(result.errors[0]?.rule).toBe('required');
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should fail on type mismatch', (): void => {
-      const result = validator.validate({ name: 123 });
       expect(result.valid).toBe(false);
       expect(result.errors[0]?.rule).toBe('type');
     });
 
-    test('should enforce minLength for strings', (): void => {
-      const result = validator.validate({ name: 'A' });
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.rule === 'minLength')).toBe(true);
     });
 
-    test('should enforce maxLength for strings', (): void => {
-      const result = validator.validate({ name: 'averylongname' });
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.rule === 'maxLength')).toBe(true);
     });
 
-    test('should ignore unknown fields in Lenient mode as warnings', (): void => {
-      const schema = {
-        level: ValidationLevel.Lenient,
-        allowUnknownFields: false,
-        rules: [
-          { field: 'name', type: 'string', required: true },
-        ],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ name: 'Sam', extra: 1 });
       expect(result.valid).toBe(true);
@@ -110,22 +92,12 @@ describe('Validator', (): void => {
       expect(result.sanitized).toEqual({ name: 'Sam' });
     });
 
-    test('should error on unknown fields in Strict mode', (): void => {
-      const result = validator.validate({ name: 'Sam', unknown: 'x' });
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.rule === 'unknown_field')).toBe(true);
       expect(result.warnings).toEqual([]);
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should allow unknown fields when allowUnknownFields=true', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          { field: 'name', type: 'string', required: true },
-        ],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ name: 'Sam', another: 'field' });
       expect(result.valid).toBe(true);
@@ -134,12 +106,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toEqual({ name: 'Sam' });
     });
 
-    test('should validate email type', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'email', type: 'email', required: true }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ email: 'user@example.com' });
       expect(ok.valid).toBe(true);
@@ -148,12 +114,6 @@ describe('Validator', (): void => {
       expect(bad.errors[0]?.rule).toBe('type');
     });
 
-    test('should validate url type and handle invalid URL via catch', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'site', type: 'url', required: true }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ site: 'https://example.com/path' });
       expect(ok.valid).toBe(true);
@@ -165,12 +125,6 @@ describe('Validator', (): void => {
       expect(bad2.errors[0]?.rule).toBe('type');
     });
 
-    test('should validate boolean type', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'active', type: 'boolean', required: true }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ active: false });
       expect(ok.valid).toBe(true);
@@ -179,12 +133,6 @@ describe('Validator', (): void => {
       expect(bad.errors[0]?.rule).toBe('type');
     });
 
-    test('should validate array type', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'tags', type: 'array', required: true }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ tags: ['a', 'b'] });
       expect(ok.valid).toBe(true);
@@ -193,12 +141,6 @@ describe('Validator', (): void => {
       expect(bad.errors[0]?.rule).toBe('type');
     });
 
-    test('should validate object type', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'meta', type: 'object', required: true }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ meta: { a: 1 } });
       expect(ok.valid).toBe(true);
@@ -210,14 +152,6 @@ describe('Validator', (): void => {
       expect(bad2.errors[0]?.rule).toBe('type');
     });
 
-    test('should enforce numeric range with min and max', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [
-          { field: 'age', type: 'number', required: true, min: 18, max: 99 },
-        ],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ age: 30 });
       expect(ok.valid).toBe(true);
@@ -235,12 +169,6 @@ describe('Validator', (): void => {
       expect(isNaNNumber.errors[0]?.rule).toBe('type');
     });
 
-    test('should validate pattern on strings', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'code', type: 'string', required: true, pattern: /^AB\d{3}$/ }],
-      };
       const localValidator = new Validator(schema);
       const ok = localValidator.validate({ code: 'AB123' });
       expect(ok.valid).toBe(true);
@@ -249,36 +177,12 @@ describe('Validator', (): void => {
       expect(bad.errors[0]?.rule).toBe('pattern');
     });
 
-    test('should handle custom validator returning false', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{
-          field: 'pin',
-          type: 'string',
-          required: true,
-          customValidator: (_v: unknown): boolean => false,
-        }],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ pin: '1234' });
       expect(result.valid).toBe(false);
       expect(result.errors[0]?.rule).toBe('custom');
     });
 
-    test('should catch errors thrown by custom validator', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{
-          field: 'value',
-          type: 'string',
-          required: true,
-          customValidator: (_v: unknown): boolean => {
-            throw new Error('boom');
-          },
-        }],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ value: 'x' });
       expect(result.valid).toBe(false);
@@ -286,12 +190,6 @@ describe('Validator', (): void => {
       expect(result.errors[0]?.message).toContain('Custom validator threw error: boom');
     });
 
-    test('should not sanitize/convert string number for number type due to type check', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'qty', type: 'number', required: true }],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ qty: '123' });
       expect(result.valid).toBe(false);
@@ -299,15 +197,6 @@ describe('Validator', (): void => {
       expect(result.errors[0]?.rule).toBe('type');
     });
 
-    test('should skip optional fields when null/undefined', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [
-          { field: 'name', type: 'string', required: true },
-          { field: 'nickname', type: 'string', required: false },
-        ],
-      };
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ name: 'John', nickname: null });
       expect(result.valid).toBe(true);
@@ -315,12 +204,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toEqual({ name: 'John' });
     });
 
-    test('should treat unknown type as invalid via validateType default case', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'x', type: 'unknown_type', required: true }],
-      };
       const localValidator = new Validator(schema as unknown as {
         level: string;
         allowUnknownFields: boolean;
@@ -333,12 +216,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should return the same result as Validator.validate for valid input', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-        rules: [{ field: 'title', type: 'string', required: true }],
-      };
       const helperResult = validateData({ title: 'Ok' }, schema);
       const directResult = new Validator(schema).validate({ title: 'Ok' });
       expect(helperResult).toEqual(directResult);
@@ -346,12 +223,6 @@ describe('Validator', (): void => {
       expect(helperResult.sanitized).toEqual({ title: 'Ok' });
     });
 
-    test('should surface errors via helper on invalid input', (): void => {
-      const schema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [{ field: 'title', type: 'string', required: true }],
-      };
       const result = validateData({ extra: 1 }, schema);
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.rule === 'required')).toBe(true);

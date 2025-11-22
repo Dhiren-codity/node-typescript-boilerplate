@@ -3,6 +3,8 @@ import { SchemaBuilder, ValidationLevel, type ValidationSchema, type ValidationR
 
 vi.mock('../../src/validation/nonexistent-dependency', (): Record<string, unknown> => ({
   default: vi.fn((): void => {}),
+
+
 }));
 
 describe('SchemaBuilder', (): void => {
@@ -13,6 +15,11 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('constructor', (): void => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
     test('should initialize with default values', (): void => {
       const schema: ValidationSchema = builder.build();
       expect(schema).toBeDefined();
@@ -38,16 +45,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add custom rule and be chainable', (): void => {
-      const rule: ValidationRule = {
-        field: 'custom',
-        type: 'string',
-        required: true,
-        minLength: 2,
-        maxLength: 10,
-        customValidator: (_value: unknown): boolean => true,
-        errorMessage: 'Custom error',
-      };
       const returned = builder.addRule(rule);
       expect(returned).toBe(builder);
 
@@ -56,8 +53,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules[0]).toMatchObject(rule);
     });
 
-    test('should allow adding multiple rules including duplicates', (): void => {
-      const rule1: ValidationRule = { field: 'dup', type: 'string', required: true };
       const rule2: ValidationRule = { field: 'dup', type: 'number', required: false };
       builder.addRule(rule1).addRule(rule2);
       const schema: ValidationSchema = builder.build();
@@ -68,9 +63,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add a required string rule with options', (): void => {
-      const pattern = /^[A-Za-z]+$/u;
-      builder.stringField('name', true, { minLength: 2, maxLength: 50, pattern, errorMessage: 'Invalid name' });
       const schema: ValidationSchema = builder.build();
       expect(schema.rules).toHaveLength(1);
       const rule = schema.rules[0] as ValidationRule;
@@ -105,8 +97,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a number rule with min and max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 150, errorMessage: 'Invalid age' });
       const schema: ValidationSchema = builder.build();
       const rule = schema.rules[0] as ValidationRule;
       expect(rule).toMatchObject({
@@ -128,8 +118,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.max).toBeUndefined();
     });
 
-    test('should allow required=false', (): void => {
-      builder.numberField('score', false, { min: 1 });
       const schema: ValidationSchema = builder.build();
       const rule = schema.rules[0] as ValidationRule;
       expect(rule.required).toBe(false);
@@ -244,9 +232,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('build', (): void => {
-    test('should build a schema after chaining methods', (): void => {
-      const built: ValidationSchema = builder
-        .stringField('name', true, { minLength: 1 })
         .numberField('age', false, { min: 0 })
         .booleanField('verified', true)
         .allowUnknown(true)

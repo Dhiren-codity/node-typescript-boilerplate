@@ -1,14 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Mock } from 'vitest';
 import {
-  ValidationLevel,
-  SchemaBuilder,
-  Validator,
-  validateData,
-  ValidationMiddleware,
-  getGlobalMiddleware,
-  resetGlobalMiddleware,
-} from './index';
 
 vi.mock('./schemas.js', () => {
   const ValidationLevel = { LOW: 'low', HIGH: 'high' } as const;
@@ -30,7 +22,6 @@ vi.mock('./schemas.js', () => {
     SchemaBuilder: MockSchemaBuilder,
   };
 });
-
 vi.mock('./validator.js', () => {
   class MockValidator {
     public calls: unknown[] = [];
@@ -43,6 +34,23 @@ vi.mock('./validator.js', () => {
 
   const validateData = vi.fn(
     (input: unknown): { ok: boolean; value: unknown } => ({ ok: true, value: input }),
+vi.mock('./middleware.js', () => {
+  type Handler = (data: unknown) => { passed: boolean; level?: string };
+
+  let globalMw: Handler | null = null;
+
+  const ValidationMiddleware = (opts?: { level?: string }): Handler => {
+
+  ValidationLevel,
+  SchemaBuilder,
+  Validator,
+  validateData,
+  ValidationMiddleware,
+  getGlobalMiddleware,
+  resetGlobalMiddleware,
+} from './index';
+
+
   );
 
   return {
@@ -51,12 +59,6 @@ vi.mock('./validator.js', () => {
   };
 });
 
-vi.mock('./middleware.js', () => {
-  type Handler = (data: unknown) => { passed: boolean; level?: string };
-
-  let globalMw: Handler | null = null;
-
-  const ValidationMiddleware = (opts?: { level?: string }): Handler => {
     const fn: Handler = (_data: unknown) => ({ passed: true, level: opts?.level });
     globalMw = fn;
     return fn;
@@ -93,31 +95,22 @@ describe('validation index re-exports', () => {
       expect(ValidationLevel.HIGH).toBe('high');
     });
 
-    test('SchemaBuilder is re-exported and behaves as mocked', (): void => {
-      const builder = new SchemaBuilder({ field: 'value' });
       const result = (builder as unknown as { build: () => unknown }).build();
       expect(result).toEqual({ built: true, rules: { field: 'value' } });
     });
   });
 
   describe('validator exports', () => {
-    test('Validator class is re-exported and validate works', (): void => {
-      const v = new Validator() as unknown as { validate: (input: unknown) => { ok: boolean; value: unknown } };
       const output = v.validate('input');
       expect(output).toEqual({ ok: true, value: 'input' });
     });
 
-    test('validateData function is re-exported and returns expected result', (): void => {
-      const output = validateData({ id: 123 });
       expect(output).toEqual({ ok: true, value: { id: 123 } });
       expect(vi.isMockFunction(validateData)).toBe(true);
       expect(validateData).toHaveBeenCalledTimes(1);
       expect(validateData).toHaveBeenCalledWith({ id: 123 });
     });
 
-    test('validateData error case propagates thrown error', (): void => {
-      const err = new Error('validation failed');
-      const validateDataMock = validateData as unknown as Mock<[unknown], { ok: boolean; value: unknown }>;
       validateDataMock.mockImplementationOnce((_input: unknown) => {
         throw err;
       });
@@ -128,8 +121,6 @@ describe('validation index re-exports', () => {
   });
 
   describe('middleware exports', () => {
-    test('ValidationMiddleware is re-exported and sets global middleware', (): void => {
-      const handler = ValidationMiddleware({ level: 'high' });
       expect(typeof handler).toBe('function');
 
       const globalHandler = getGlobalMiddleware();
@@ -139,14 +130,9 @@ describe('validation index re-exports', () => {
       expect(result).toEqual({ passed: true, level: 'high' });
     });
 
-    test('ValidationMiddleware without options works and level is undefined', (): void => {
-      const handler = ValidationMiddleware();
-      const result = handler({ test: true });
       expect(result).toEqual({ passed: true, level: undefined });
     });
 
-    test('resetGlobalMiddleware clears global handler', (): void => {
-      const handler = ValidationMiddleware({ level: 'low' });
       expect(getGlobalMiddleware()).toBe(handler);
 
       resetGlobalMiddleware();

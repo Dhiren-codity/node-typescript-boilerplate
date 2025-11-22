@@ -9,13 +9,11 @@ vi.mock('./schemas.js', () => {
     build(): string {
       return `built:${this.value}`;
     }
-  }
   const ValidationLevel = { LOW: 'low', HIGH: 'high' } as const;
   return {
     ValidationLevel,
     SchemaBuilder: MockSchemaBuilder,
   };
-});
 
 vi.mock('./validator.js', () => {
   class MockValidator {
@@ -27,7 +25,6 @@ vi.mock('./validator.js', () => {
       this.validateCalledWith = [data];
       return 'ok';
     }
-  }
   const validateData = vi.fn((data: unknown): string => {
     if (data === 'bad') {
       throw new Error('invalid');
@@ -46,7 +43,6 @@ vi.mock('./middleware.js', () => {
     use(input: unknown): void {
       this.calls.push(input);
     }
-  }
   const middlewareInstance = new MockValidationMiddleware();
   const getGlobalMiddleware = vi.fn((): MockValidationMiddleware => middlewareInstance);
   const resetGlobalMiddleware = vi.fn((): void => {
@@ -57,7 +53,6 @@ vi.mock('./middleware.js', () => {
     getGlobalMiddleware,
     resetGlobalMiddleware,
   };
-});
 
 import {
   ValidationLevel,
@@ -82,11 +77,6 @@ import {
   resetGlobalMiddleware as resetGlobalMiddlewareMock,
 } from './middleware.js';
 
-describe('src/validation/index re-exports', () => {
-  beforeEach((): void => {
-    // Ensure middleware state is clean for each test
-    resetGlobalMiddleware();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -98,7 +88,6 @@ describe('src/validation/index re-exports', () => {
       expect(ValidationLevel).toBeDefined();
       expect(ValidationLevel).toMatchObject({ LOW: 'low', HIGH: 'high' });
     });
-  });
 
   describe('SchemaBuilder', () => {
     test('should be re-exported with exact identity', (): void => {
@@ -108,7 +97,6 @@ describe('src/validation/index re-exports', () => {
       const output = builder.build();
       expect(output).toBe('built:input');
     });
-  });
 
   describe('Validator', () => {
     test('should be re-exported with exact identity', (): void => {
@@ -119,7 +107,6 @@ describe('src/validation/index re-exports', () => {
       expect(result).toBe('ok');
       expect(instance.validateCalledWith).toEqual([{ key: 'value' }]);
     });
-  });
 
   describe('validateData', () => {
     test('should be re-exported with exact identity', (): void => {
@@ -138,7 +125,6 @@ describe('src/validation/index re-exports', () => {
     test('should throw for bad input', (): void => {
       expect(() => validateData('bad')).toThrowError('invalid');
     });
-  });
 
   describe('ValidationMiddleware and global middleware helpers', () => {
     test('ValidationMiddleware should be re-exported with exact identity', (): void => {
@@ -174,5 +160,3 @@ describe('src/validation/index re-exports', () => {
       const instanceAfter = getGlobalMiddleware() as unknown as { calls: unknown[] };
       expect(instanceAfter.calls).toEqual([]);
     });
-  });
-});

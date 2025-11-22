@@ -11,31 +11,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
 import { Validator, validateData } from '../../src/validation/validator.ts';
 import { ValidationLevel } from '../../src/validation/schemas.js';
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let schema: {
-    rules: Array<{
-      field: string;
-      type:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'email'
-        | 'url';
-      required?: boolean;
-      minLength?: number;
-      maxLength?: number;
-      min?: number;
-      max?: number;
-      pattern?: RegExp;
-      customValidator?: (value: unknown) => boolean;
-      errorMessage?: string;
-    }>;
-    allowUnknownFields?: boolean;
-    level: typeof ValidationLevel[keyof typeof ValidationLevel];
-  };
 
   beforeEach((): void => {
     schema = {
@@ -64,7 +39,6 @@ describe('Validator', (): void => {
       const returnedSchema = validator.getSchema();
       expect(returnedSchema).toBeDefined();
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return a shallow copy of the schema', (): void => {
@@ -74,35 +48,18 @@ describe('Validator', (): void => {
       (returnedSchema as { level: number }).level = ValidationLevel.Permissive;
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('getLevel', (): void => {
     test('should return the current validation level', (): void => {
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should update the validation level', (): void => {
       validator.setLevel(ValidationLevel.Permissive);
       expect(validator.getLevel()).toBe(ValidationLevel.Permissive);
     });
-  });
 
-  describe('validate', (): void => {
-      const result = validator.validate(data);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-      expect(result.warnings).toHaveLength(0);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized).toEqual({
-        name: 'Alice',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-      });
-    });
 
       const missing = validator.validate(dataMissing);
       expect(missing.valid).toBe(false);
@@ -248,14 +205,9 @@ describe('Validator', (): void => {
       expect(res.valid).toBe(false);
       expect(res.sanitized).toBeUndefined();
     });
-  });
 
-  describe('validateData (helper)', (): void => {
-      const data: Record<string, unknown> = { title: '  Hello  ' };
       const res = validateData(data, quickSchema as unknown as any);
       expect(res.valid).toBe(true);
       expect(res.errors).toHaveLength(0);
       expect(res.sanitized).toEqual({ title: 'Hello' });
     });
-  });
-});

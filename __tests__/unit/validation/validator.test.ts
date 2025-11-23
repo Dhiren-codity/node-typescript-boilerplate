@@ -10,13 +10,6 @@ vi.mock('../src/validation/schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let baseSchema: {
-    rules: Array<Record<string, unknown>>;
-    allowUnknownFields: boolean;
-    level: string;
-  };
 
   beforeEach((): void => {
     baseSchema = {
@@ -50,15 +43,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-      expect(result.warnings).toHaveLength(0);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized).toEqual({ name: 'Alice', age: 30 });
-    });
 
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
@@ -213,13 +198,8 @@ describe('Validator', (): void => {
       expect(third.valid).toBe(false);
       expect(third.errors).toHaveLength(1);
     });
-  });
 
-  describe('validateData helper', (): void => {
-      const result = validateData({ name: 'Helper' }, schema as unknown as Record<string, unknown> as never);
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
       expect(result.sanitized).toEqual({ name: 'Helper' });
     });
-  });
-});

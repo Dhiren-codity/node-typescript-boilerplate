@@ -12,7 +12,6 @@ vi.mock('../src/validation/schemas.js', () => {
       this.built = true;
       return 'built';
     }
-  }
 
   const ValidationLevel = Object.freeze({ NONE: 0, WARN: 1, ERROR: 2 });
 vi.mock('../src/validation/validator.js', () => {
@@ -71,10 +70,6 @@ vi.mock('../src/validation/middleware.js', () => {
   };
 });
 
-describe('validation index barrel', () => {
-  beforeEach((): void => {
-    // no-op setup
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();

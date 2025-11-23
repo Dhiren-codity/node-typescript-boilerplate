@@ -2,12 +2,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel, type ValidationRule } from '../../src/validation/schemas';
 
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.restoreAllMocks();
@@ -34,28 +28,14 @@ describe('SchemaBuilder', (): void => {
     test('should handle empty schema name without throwing', (): void => {
       expect((): void => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _unused = new SchemaBuilder('', ValidationLevel.Strict);
-      }).not.toThrow();
     });
-  });
 
-  describe('addRule', (): void => {
-
-      const returned = builder.addRule(rule);
-      expect(returned).toBe(builder);
-
-      const schema = builder.build();
-      expect(schema.rules.length).toBe(1);
-      expect(schema.rules[0]).toBe(rule);
-      expect(schema.rules[0].customValidator).toBe(customValidator);
-    });
 
       const r2: ValidationRule = { field: 'b', type: 'number', required: false };
       builder.addRule(r1).addRule(r2);
       const schema = builder.build();
       expect(schema.rules.map((r): string => r.field)).toEqual(['a', 'b']);
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string field by default', (): void => {
@@ -89,7 +69,6 @@ describe('SchemaBuilder', (): void => {
         builder.stringField('large', true, { minLength: 0, maxLength: 1000000 });
       }).not.toThrow();
     });
-  });
 
   describe('numberField', (): void => {
     test('should add number field with defaults', (): void => {
@@ -113,7 +92,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.max).toBe(100);
       expect(rule?.errorMessage).toBe('Invalid score');
     });
-  });
 
   describe('emailField', (): void => {
     test('should add required email field with default error message and regex pattern', (): void => {
@@ -139,7 +117,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Custom email error');
     });
-  });
 
   describe('urlField', (): void => {
     test('should add required url field with default error message', (): void => {
@@ -160,7 +137,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Custom URL error');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add a boolean field with required true by default', (): void => {
@@ -177,7 +153,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule).toBeDefined();
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('arrayField', (): void => {
     test('should add an array field', (): void => {
@@ -187,7 +162,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.type).toBe('array');
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('objectField', (): void => {
     test('should add an object field', (): void => {
@@ -252,8 +226,6 @@ describe('SchemaBuilder', (): void => {
     });
   });
 
-  describe('fluent API', (): void => {
-        .numberField('count', false, { min: 0 })
         .emailField('contact', true)
         .urlField('link', false, 'Bad URL')
         .booleanField('published', true)

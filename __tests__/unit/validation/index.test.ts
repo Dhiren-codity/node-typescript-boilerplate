@@ -23,13 +23,11 @@ vi.mock('../../src/validation/schemas.js', () => {
     public build(): Record<string, unknown> {
       return { rules: [...this.rules] };
     }
-  }
 
   return {
     ValidationLevel,
     SchemaBuilder,
   };
-});
 vi.mock('../../src/validation/validator.js', () => {
   class Validator {
     private options: unknown;
@@ -44,7 +42,6 @@ vi.mock('../../src/validation/validator.js', () => {
     public getOptions(): unknown {
       return this.options;
     }
-  }
 
   const validateData = vi.fn(async (_data: unknown): Promise<{ valid: boolean }> => {
     return { valid: true };
@@ -63,7 +60,6 @@ vi.mock('../../src/validation/middleware.js', () => {
     public getOptions(): unknown {
       return this.options;
     }
-  }
 
   let globalInstance: ValidationMiddleware | null = null;
 
@@ -78,9 +74,7 @@ vi.mock('../../src/validation/middleware.js', () => {
     Validator,
     validateData,
   };
-});
 
-    }
     return globalInstance;
   };
 
@@ -93,7 +87,6 @@ vi.mock('../../src/validation/middleware.js', () => {
     getGlobalMiddleware,
     resetGlobalMiddleware,
   };
-});
 
   ValidationLevel,
   SchemaBuilder,
@@ -103,10 +96,6 @@ vi.mock('../../src/validation/middleware.js', () => {
   getGlobalMiddleware,
   resetGlobalMiddleware,
 
-describe('validation/index re-exports', () => {
-  beforeEach((): void => {
-    // No setup required beyond mocks; ensure clean state where needed
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -120,16 +109,7 @@ describe('validation/index re-exports', () => {
       expect(ValidationLevel.MEDIUM).toBe('medium');
       expect(ValidationLevel.HIGH).toBe('high');
     });
-  });
 
-  describe('SchemaBuilder', () => {
-
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('rules');
-      const rules = (result as Record<string, unknown>).rules as unknown[];
-      expect(Array.isArray(rules)).toBe(true);
-      expect(rules.length).toBe(2);
-      expect(rules[0]).toEqual({ field: 'x', required: true });
       expect(rules[1]).toEqual({ field: 'y', type: 'number' });
     });
 
@@ -138,12 +118,7 @@ describe('validation/index re-exports', () => {
       const result = builder.build();
       expect(result).toEqual({ rules: [] });
     });
-  });
 
-  describe('Validator', () => {
-      const instance = new Validator(options);
-
-      const opt = (instance as unknown as { getOptions: () => unknown }).getOptions();
       expect(opt).toEqual(options);
 
       const isValid = await instance.validate({ name: 'alice' });
@@ -158,10 +133,7 @@ describe('validation/index re-exports', () => {
       await expect(instance.validate({})).rejects.toThrow('Invalid data');
       expect((instance.validate as unknown as Mock<[unknown], Promise<boolean>>).mock.calls.length).toBe(1);
     });
-  });
 
-  describe('validateData function', () => {
-      expect(result).toEqual({ valid: true });
       expect((validateData as unknown as Mock<[unknown], Promise<{ valid: boolean }>>).mock.calls.length).toBe(1);
     });
 
@@ -170,10 +142,6 @@ describe('validation/index re-exports', () => {
     });
   });
 
-  describe('ValidationMiddleware', () => {
-      const middleware = new ValidationMiddleware(options);
-
-      const opt = (middleware as unknown as { getOptions: () => unknown }).getOptions();
       expect(opt).toEqual(options);
 
       const executed = await middleware.execute({ payload: true });

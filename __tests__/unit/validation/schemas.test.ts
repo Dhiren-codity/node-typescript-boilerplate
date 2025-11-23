@@ -6,12 +6,6 @@ vi.mock('node:fs', (): Record<string, unknown> => ({
   writeFileSync: vi.fn(),
 }));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
 
 // Mock a built-in module (no direct deps to mock in SchemaBuilder)
@@ -45,23 +39,7 @@ describe('SchemaBuilder', (): void => {
         builder.build();
       }).not.toThrow();
     });
-  });
 
-  describe('addRule', (): void => {
-
-      expect(returnValue).toBe(builder);
-
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('age');
-      expect(rule.type).toBe('number');
-      expect(rule.required).toBe(true);
-      expect(rule.min).toBe(0);
-      expect(rule.max).toBe(120);
-      expect(rule.customValidator).toBe(customValidator);
-      expect(rule.errorMessage).toBe('Invalid age');
-    });
 
       builder.addRule({ field: 'name', type: 'string', required: false });
 
@@ -76,7 +54,6 @@ describe('SchemaBuilder', (): void => {
         builder.addRule({ field: 'active', type: 'boolean', required: true });
       }).not.toThrow();
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string rule by default', (): void => {
@@ -117,7 +94,6 @@ describe('SchemaBuilder', (): void => {
         builder.stringField('title', true);
       }).not.toThrow();
     });
-  });
 
   describe('numberField', (): void => {
     test('should add a required number rule by default', (): void => {
@@ -141,7 +117,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.max).toBe(100);
       expect(rule.errorMessage).toBe('Score out of range');
     });
-  });
 
   describe('emailField', (): void => {
     test('should add a required email rule with default error message and pattern', (): void => {
@@ -164,7 +139,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.required).toBe(false);
       expect(rule.errorMessage).toBe('Please provide a valid email');
     });
-  });
 
   describe('urlField', (): void => {
     test('should add a required url rule with default error message', (): void => {

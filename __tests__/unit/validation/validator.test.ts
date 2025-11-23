@@ -11,20 +11,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let baseSchema: unknown;
-
-  beforeEach((): void => {
-    baseSchema = {
-      rules: [
-        { field: 'name', type: 'string', required: true, minLength: 2, maxLength: 10 },
-      ],
-      allowUnknownFields: false,
-      level: ValidationLevel.Strict,
-    };
-    validator = new Validator(baseSchema as unknown as ValidationSchema);
-  });
 
 
 // Mock schemas dependency used by the Validator
@@ -43,12 +29,7 @@ describe('Validator', (): void => {
       expect(schemaCopy.level).toBe(ValidationLevel.Strict);
       expect(schemaCopy.allowUnknownFields).toBe(false);
     });
-  });
 
-  describe('validate', (): void => {
-      const v = new Validator(schema as unknown as ValidationSchema);
-
-      const result = v.validate({ name: '  Alice  ' });
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
       expect(result.warnings).toHaveLength(0);
@@ -211,38 +192,21 @@ describe('Validator', (): void => {
       expect(result.errors[0]?.rule).toBe('type');
       expect(result.errors[0]?.message).toBe("Field 'mystery' must be of type unknown_type");
     });
-  });
 
-  describe('getSchema', (): void => {
-      const originalLevel = validator.getLevel();
-      expect(schemaCopy.level).toBe(originalLevel);
-
-      // Mutate copy and verify validator's schema is not changed at top level
-      schemaCopy.level = ValidationLevel.Lenient;
-      schemaCopy.allowUnknownFields = true;
-      expect(validator.getLevel()).toBe(originalLevel);
-      const schemaCopy2 = validator.getSchema() as { allowUnknownFields: unknown };
       expect(schemaCopy2.allowUnknownFields).toBe(false);
     });
-  });
 
   describe('getLevel', (): void => {
     test('should return current validation level', (): void => {
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should update validation level', (): void => {
       validator.setLevel(ValidationLevel.Lenient);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
-});
 
-describe('validateData helper', (): void => {
-
-    const result = validateData({ title: '  Hello  ' }, schema as unknown as ValidationSchema);
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
     expect(result.sanitized).toEqual({ title: 'Hello' });
@@ -254,4 +218,3 @@ describe('validateData helper', (): void => {
     expect(result.errors).toHaveLength(1);
     expect(result.sanitized).toBeUndefined();
   });
-});

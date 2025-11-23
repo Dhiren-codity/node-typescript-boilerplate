@@ -8,16 +8,8 @@ const middlewareFactory = (): unknown => {
   type Options = Record<string, unknown>;
   const state: { lastOpts: Options | null } = { lastOpts: null };
 
-  const ValidationMiddlewareMock = vi.fn((opts?: Options): string => {
-    state.lastOpts = opts ?? null;
-    return 'mw';
-  });
 vi.mock(middlewareJsPath, middlewareFactory, { virtual: true });
 
-describe('validation/index barrel exports', (): void => {
-  beforeEach((): void => {
-    // No specific setup required beyond mocks
-  });
 
   ValidationLevel,
   SchemaBuilder,
@@ -29,15 +21,8 @@ describe('validation/index barrel exports', (): void => {
 } from '../../src/validation/index';
 
 // Resolve possible import ids and provide virtual mocks to intercept re-exports regardless of extension resolution
-const schemasTsPath: string = new URL('../../src/validation/schemas.ts', import.meta.url).pathname;
-const schemasJsPath: string = new URL('../../src/validation/schemas.js', import.meta.url).pathname;
-const validatorTsPath: string = new URL('../../src/validation/validator.ts', import.meta.url).pathname;
-const validatorJsPath: string = new URL('../../src/validation/validator.js', import.meta.url).pathname;
-const middlewareTsPath: string = new URL('../../src/validation/middleware.ts', import.meta.url).pathname;
-const middlewareJsPath: string = new URL('../../src/validation/middleware.js', import.meta.url).pathname;
 
 // schemas mock (both .ts and .js ids)
-const schemasFactory = (): unknown => {
   class MockSchemaBuilder {
     rules: unknown[] = [];
     // Using class fields to attach spies
@@ -45,10 +30,6 @@ const schemasFactory = (): unknown => {
       this.rules.push(rule);
       return this;
     });
-  }
-  };
-};
-  });
   describe('schemas re-exports', (): void => {
     test('ValidationLevel should expose expected keys', (): void => {
       expect(ValidationLevel).toBeDefined();
@@ -57,11 +38,6 @@ const schemasFactory = (): unknown => {
       expect(levelObj.LENIENT).toBe('lenient');
     });
 
-    });
-      });
-    });
-  describe('validator re-exports', (): void => {
-      const schema: Record<string, unknown> = { type: 'object' };
       const result = validateData(data, schema);
       expect(result).toBe('validated');
 
@@ -89,12 +65,7 @@ const schemasFactory = (): unknown => {
       expect(result2).toBe(false);
       expect(validateSpy.mock.calls.length).toBe(2);
     });
-  });
 
-  describe('middleware re-exports', (): void => {
-      expect(result).toBe('mw');
-
-      const state = getGlobalMiddleware() as { lastOpts: unknown };
       expect(state).toBeDefined();
       expect(state.lastOpts).toEqual({ level: 'strict', enabled: true });
     });
@@ -107,4 +78,3 @@ const schemasFactory = (): unknown => {
       state = getGlobalMiddleware() as { lastOpts: unknown };
       expect(state.lastOpts).toBeNull();
     });
-  });

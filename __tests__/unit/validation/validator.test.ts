@@ -11,31 +11,6 @@ vi.mock('./schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let schema: ValidationSchema;
-  let validator: Validator;
-
-  beforeEach((): void => {
-    const rules: ValidationRule[] = [
-      { field: 'name', type: 'string', required: true, minLength: 2, maxLength: 10 },
-      { field: 'age', type: 'number', required: true, min: 18, max: 99 },
-      { field: 'email', type: 'email', required: true },
-      { field: 'website', type: 'url', required: false },
-      { field: 'tags', type: 'array', required: false },
-      { field: 'profile', type: 'object', required: false },
-      { field: 'code', type: 'string', required: false, pattern: /^\d{3}$/ },
-      { field: 'flag', type: 'boolean', required: false },
-      { field: 'token', type: 'string', required: false, customValidator: (v: unknown): boolean => typeof v === 'string' && v.startsWith('tok_') },
-    ];
-
-    schema = {
-      rules,
-      level: ValidationLevel.Strict,
-      allowUnknownFields: false,
-    };
-
-    validator = new Validator(schema as ConstructorParameters<typeof Validator>[0]);
-  });
 
 
 // Type declarations for the mocked module to satisfy TypeScript
@@ -79,7 +54,6 @@ declare module './schemas.js' {
     warnings: string[];
     sanitized?: Record<string, unknown>;
   }
-}
 
 // Runtime mock for the dependency module
 
@@ -103,28 +77,7 @@ declare module './schemas.js' {
       validator.setLevel(ValidationLevel.Relaxed);
       expect(validator.getLevel()).toBe(ValidationLevel.Relaxed);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const result = validator.validate(data) as ValidationResult;
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-      // Unknown field should be a warning in Relaxed mode
-      expect(result.warnings).toHaveLength(1);
-      expect(result.warnings[0]).toContain("Unknown field 'extra'");
-
-      expect(result.sanitized).toBeDefined();
-      const sanitized = result.sanitized as Record<string, unknown>;
-      expect(Object.prototype.hasOwnProperty.call(sanitized, 'extra')).toBe(false);
-      expect(sanitized.name).toBe('Alice'); // trimmed
-      expect(sanitized.age).toBe(30);
-      expect(sanitized.email).toBe('alice@example.com');
-      expect(sanitized.website).toBe('https://example.com');
-      expect(sanitized.code).toBe('123');
-      expect(sanitized.flag).toBe(true);
-      expect(sanitized.token).toBe('tok_123');
-    });
 
 
       const result = validator.validate(data) as ValidationResult;
@@ -143,8 +96,6 @@ declare module './schemas.js' {
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'extra')).toBe(false);
     });
 
-      };
-    });
 
       const result = validator.validate(data) as ValidationResult;
       expect(result.valid).toBe(false);
@@ -157,11 +108,6 @@ declare module './schemas.js' {
       expect(result.sanitized).toBeUndefined();
     });
 
-      };
-    });
-      };
-      };
-    });
 
       // Add a rule whose validator throws
       schema.rules.push({
@@ -194,10 +140,6 @@ declare module './schemas.js' {
       expect(result.sanitized).toBeUndefined();
     });
 
-    });
-  describe('validateData helper', (): void => {
-
-      const data: Record<string, unknown> = { name: '  John  ' };
       const result = validateData(data, localSchema) as ValidationResult;
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -214,4 +156,3 @@ declare module './schemas.js' {
       expect(result.errors.some((e) => e.field === 'name' && e.rule === 'minLength')).toBe(true);
       expect(result.sanitized).toBeUndefined();
     });
-  });

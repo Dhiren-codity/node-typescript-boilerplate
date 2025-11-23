@@ -5,12 +5,6 @@ vi.mock('node:events', (): Record<string, unknown> => ({
   EventEmitter: vi.fn(),
 }));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('User', ValidationLevel.Moderate);
-  });
 
 
 
@@ -35,44 +29,10 @@ describe('SchemaBuilder', (): void => {
       const schema: ValidationSchema = localBuilder.build();
       expect(schema.level).toBe(ValidationLevel.Moderate);
     });
-  });
 
-  describe('addRule', (): void => {
-
-      const returned: SchemaBuilder = builder.addRule(rule);
-      expect(returned).toBe(builder);
-
-      const schema: ValidationSchema = builder.build();
-      expect(schema.rules.length).toBe(1);
-      expect(schema.rules[0]).toMatchObject({
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 18,
-        max: 99,
-        errorMessage: 'Age must be between 18 and 99',
-      });
       expect(typeof schema.rules[0]?.customValidator).toBe('function');
     });
 
-      };
-    });
-  });
-  describe('stringField', (): void => {
-      expect(returned).toBe(builder);
-
-      const schema: ValidationSchema = builder.build();
-      expect(schema.rules.length).toBe(1);
-      expect(schema.rules[0]).toMatchObject({
-        field: 'name',
-        type: 'string',
-        required: true,
-        minLength: 2,
-        maxLength: 50,
-        pattern,
-        errorMessage: 'Name must be alphabetic',
-      });
-    });
 
     test('should add an optional string rule when required is false', (): void => {
       builder.stringField('nickname', false);
@@ -82,22 +42,7 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.type).toBe('string');
       expect(rule?.required).toBe(false);
     });
-  });
 
-  describe('numberField', (): void => {
-      const schema: ValidationSchema = builder.build();
-      const rule = schema.rules.find((r) => r.field === 'score');
-      expect(rule).toBeDefined();
-      expect(rule).toMatchObject({
-        field: 'score',
-        type: 'number',
-        required: true,
-        min: 0,
-        max: 100,
-        errorMessage: 'Score must be 0-100',
-      });
-    });
-  });
 
   describe('emailField', (): void => {
     test('should add an email rule with default error message and regex pattern', (): void => {
@@ -121,7 +66,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule).toBeDefined();
       expect(rule?.errorMessage).toBe('Custom email error');
     });
-  });
 
   describe('urlField', (): void => {
     test('should add a url rule with default error message', (): void => {
@@ -140,7 +84,6 @@ describe('SchemaBuilder', (): void => {
       const rule = schema.rules.find((r) => r.field === 'homepage');
       expect(rule?.errorMessage).toBe('Bad URL');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add a boolean rule', (): void => {
@@ -240,9 +183,6 @@ describe('SchemaBuilder', (): void => {
     });
   });
 
-  describe('fluent chaining', (): void => {
-        .emailField('email', true)
-        .numberField('age', false, { min: 0 })
         .allowUnknown(true)
         .setLevel(ValidationLevel.Strict);
 

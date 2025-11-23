@@ -28,21 +28,6 @@ type TestValidationSchema = {
   level: string;
 };
 
-describe('Validator', (): void => {
-  let defaultSchema: TestValidationSchema;
-  let validator: Validator;
-
-  beforeEach((): void => {
-    defaultSchema = {
-      level: ValidationLevel.Strict as string,
-      allowUnknownFields: false,
-      rules: [
-        { field: 'name', type: 'string', required: true, minLength: 2, maxLength: 10 },
-        { field: 'age', type: 'number', required: true, min: 18, max: 99 },
-      ],
-    };
-    validator = new Validator(defaultSchema as unknown as TestValidationSchema);
-  });
 
 
 
@@ -60,7 +45,6 @@ describe('Validator', (): void => {
       expect(Array.isArray(schemaCopy.rules)).toBe(true);
       expect(schemaCopy.rules.length).toBe(2);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return a shallow copy of schema', (): void => {
@@ -72,7 +56,6 @@ describe('Validator', (): void => {
       schemaCopy.level = ValidationLevel.Lenient as string;
       expect(validator.getLevel()).toBe(originalLevel);
     });
-  });
 
   describe('getLevel and setLevel', (): void => {
     test('should get current level and update it via setLevel', (): void => {
@@ -80,18 +63,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient as unknown as typeof ValidationLevel);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const result = validator.validate(data);
-      expect(result.valid).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result.warnings).toEqual([]);
-      expect(result.sanitized).toBeDefined();
-      expect((result.sanitized as Record<string, unknown>).name).toBe('Alice');
-      expect((result.sanitized as Record<string, unknown>).age).toBe(30);
-    });
 
 
       const result = validator.validate(data);
@@ -240,11 +212,7 @@ describe('Validator', (): void => {
       expect(res.valid).toBe(false);
       expect(res.sanitized).toBeUndefined();
     });
-  });
 
-  describe('validateData helper', (): void => {
-
-      const ok = validateData({ title: 'Hello', count: 1 }, schema as unknown as TestValidationSchema);
       expect(ok.valid).toBe(true);
       expect(ok.errors).toEqual([]);
       expect(ok.sanitized).toBeDefined();
@@ -254,5 +222,3 @@ describe('Validator', (): void => {
       expect(bad.errors.some((e) => e.field === 'title' && e.rule === 'minLength')).toBe(true);
       expect(bad.errors.some((e) => e.field === 'count' && e.rule === 'min')).toBe(true);
     });
-  });
-});

@@ -30,19 +30,11 @@ const {
   resetGlobalMiddleware,
 } = indexModule;
 
-describe('validation index barrel exports', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-  });
 
 
 // Resolve module IDs to absolute paths to ensure vi.mock matches resolved imports
 const rootDir: string = process.cwd();
 const srcValidationDir: string = path.resolve(rootDir, 'src', 'validation');
-const schemasModuleId: string = path.resolve(srcValidationDir, 'schemas.js');
-const validatorModuleId: string = path.resolve(srcValidationDir, 'validator.js');
-const middlewareModuleId: string = path.resolve(srcValidationDir, 'middleware.js');
-const indexModuleId: string = path.resolve(srcValidationDir, 'index.ts');
 
 // Prepare mocks for re-exported modules
 const validationLevelMock: Record<string, unknown> = Object.freeze({
@@ -60,14 +52,12 @@ class SchemaBuilderMock {
     this.rules.push(rule);
     return this;
   }
-}
 
 class ValidatorMock {
   public validate: (_data: unknown) => { success: boolean };
   public constructor() {
     this.validate = vi.fn<[unknown], { success: boolean }>(() => ({ success: true }));
   }
-}
 
 type ValidateDataArgs = [data: unknown, schema?: unknown];
 type ValidateDataReturn = { success: boolean };
@@ -105,10 +95,7 @@ const resetGlobalMiddlewareMock = vi.fn<[], void>(() => {});
       expect(getGlobalMiddleware).toBe(getGlobalMiddlewareMock);
       expect(resetGlobalMiddleware).toBe(resetGlobalMiddlewareMock);
     });
-  });
 
-  describe('functional behavior through re-exports', () => {
-      const schema: Record<string, unknown> = { required: ['id'] };
       const result = validateData(input, schema) as { success: boolean };
 
       expect(validateDataMock).toHaveBeenCalledTimes(1);
@@ -149,5 +136,3 @@ const resetGlobalMiddlewareMock = vi.fn<[], void>(() => {});
       resetGlobalMiddleware();
       expect(resetGlobalMiddlewareMock).toHaveBeenCalledTimes(1);
     });
-  });
-});

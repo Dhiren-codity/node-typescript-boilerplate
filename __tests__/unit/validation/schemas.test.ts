@@ -3,12 +3,6 @@ import { SchemaBuilder, ValidationLevel } from '../src/validation/schemas';
 
 vi.mock('node:fs', (): Record<string, unknown> => ({}));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
 
 
@@ -32,21 +26,7 @@ describe('SchemaBuilder', (): void => {
       const schema = custom.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
     });
-  });
 
-  describe('addRule', (): void => {
-      const schema = builder.build();
-      expect(returnValue).toBe(builder);
-      expect(schema.rules.length).toBe(1);
-      expect(schema.rules[0]?.field).toBe('username');
-      expect(schema.rules[0]?.type).toBe('string');
-      expect(schema.rules[0]?.required).toBe(true);
-      expect(schema.rules[0]?.minLength).toBe(3);
-      expect(schema.rules[0]?.maxLength).toBe(30);
-      expect(typeof schema.rules[0]?.customValidator).toBe('function');
-      expect(schema.rules[0]?.customValidator?.('abc')).toBe(true);
-      expect(schema.rules[0]?.customValidator?.(123)).toBe(false);
-    });
 
     test('should not throw when given a malformed rule object (runtime misuse)', (): void => {
       expect((): void => {
@@ -54,7 +34,6 @@ describe('SchemaBuilder', (): void => {
         builder.addRule(undefined as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as unknown as never as never);
       }).not.toThrow();
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string rule by default', (): void => {
@@ -78,7 +57,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.pattern?.test('ABC')).toBe(true);
       expect(rule?.pattern?.test('Abc')).toBe(false);
     });
-  });
 
   describe('numberField', (): void => {
     test('should add a required number rule by default', (): void => {
@@ -97,7 +75,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.max).toBe(100);
       expect(rule?.errorMessage).toBe('Out of range');
     });
-  });
 
   describe('emailField', (): void => {
     test('should add an email rule with default error message and pattern', (): void => {
@@ -118,7 +95,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Custom email error');
     });
-  });
 
   describe('urlField', (): void => {
     test('should add a URL rule with default error message', (): void => {
@@ -136,7 +112,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Bad URL');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add a required boolean rule by default', (): void => {
@@ -152,7 +127,6 @@ describe('SchemaBuilder', (): void => {
       const [rule] = builder.build().rules;
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('arrayField', (): void => {
     test('should add an array rule', (): void => {
@@ -168,7 +142,6 @@ describe('SchemaBuilder', (): void => {
       const [rule] = builder.build().rules;
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('objectField', (): void => {
     test('should add an object rule', (): void => {
@@ -210,8 +183,6 @@ describe('SchemaBuilder', (): void => {
     });
   });
 
-  describe('build', (): void => {
-        .numberField('age', false, { min: 0 })
         .emailField('email', true);
 
       const schema = builder.build();

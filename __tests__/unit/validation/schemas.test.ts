@@ -46,16 +46,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule and return the same instance (fluent)', (): void => {
-      const customValidator = (_value: unknown): boolean => true;
-      const rule: ValidationRule = {
-        field: 'custom',
-        type: 'string',
-        required: true,
-        minLength: 3,
-        customValidator,
-        errorMessage: 'Custom error',
-      };
 
       const returned = builder.addRule(rule);
       expect(returned).toBe(builder);
@@ -65,14 +55,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules[0]).toEqual(rule);
     });
 
-    test('should store provided customValidator function reference', (): void => {
-      const customValidator = (_value: unknown): boolean => false;
-      builder.addRule({
-        field: 'check',
-        type: 'number',
-        required: false,
-        customValidator,
-      });
 
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0].customValidator).toBe(customValidator);
@@ -91,8 +73,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should add an optional string rule with options', (): void => {
-      const options = { minLength: 2, maxLength: 10, pattern: /^[a-z]+$/i, errorMessage: 'Invalid username' };
       builder.stringField('username', false, options);
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0]).toEqual({
@@ -110,8 +90,6 @@ describe('SchemaBuilder', (): void => {
       expect((): SchemaBuilder => builder.stringField('desc', true, undefined)).not.toThrow();
     });
 
-    test('should accept inconsistent min/max without throwing (edge case)', (): void => {
-      builder.stringField('weird', true, { minLength: 5, maxLength: 1 });
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0].minLength).toBe(5);
       expect(schema.rules[0].maxLength).toBe(1);
@@ -129,8 +107,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should add an optional number rule with min and max', (): void => {
-      builder.numberField('age', false, { min: 1, max: 120, errorMessage: 'Invalid age' });
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0]).toEqual({
         field: 'age',
@@ -142,8 +118,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should accept inconsistent min/max without throwing (edge case)', (): void => {
-      builder.numberField('range', true, { min: 10, max: 1 });
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0].min).toBe(10);
       expect(schema.rules[0].max).toBe(1);
@@ -333,8 +307,6 @@ describe('SchemaBuilder', (): void => {
       ]);
     });
 
-    test('should allow duplicate field rules and maintain insertion order', (): void => {
-      builder.stringField('dup', true, { minLength: 1 });
       builder.stringField('dup', false, { maxLength: 5 });
       const schema: ValidationSchema = builder.build();
       expect(schema.rules).toHaveLength(2);

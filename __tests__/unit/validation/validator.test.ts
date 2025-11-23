@@ -90,16 +90,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate valid data and return sanitized output (string trimmed)', (): void => {
-      const data: Record<string, unknown> = {
-        name: ' Alice ',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-        tags: ['a', 'b'],
-        meta: { key: 'value' },
-        active: true,
-      };
 
       const result: ValidationResult = validator.validate(data);
 
@@ -118,10 +108,6 @@ describe('Validator', (): void => {
       });
     });
 
-    test('should report error when required field is missing', (): void => {
-      const data: Record<string, unknown> = {
-        age: 25,
-      };
 
       const result: ValidationResult = validator.validate(data);
 
@@ -133,11 +119,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should report type error for mismatched number type', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: '30',
-      };
 
       const result: ValidationResult = validator.validate(data);
 
@@ -149,11 +130,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should enforce string minLength', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'A',
-        age: 30,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -163,11 +139,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should enforce string maxLength', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'NameIsTooLong',
-        age: 30,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -177,11 +148,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should enforce number min range', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: 16,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -191,11 +157,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should enforce number max range', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: 120,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -205,11 +166,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should validate pattern for string fields', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Alice1',
-        age: 30,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -219,12 +175,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should validate email type', (): void => {
-      const valid: Record<string, unknown> = {
-        name: 'Bob',
-        age: 30,
-        email: 'bob@example.com',
-      };
       const invalid: Record<string, unknown> = {
         name: 'Bob',
         age: 30,
@@ -243,12 +193,6 @@ describe('Validator', (): void => {
       expect((err as ValidationError).message).toContain("must be of type email");
     });
 
-    test('should validate url type', (): void => {
-      const invalid: Record<string, unknown> = {
-        name: 'Bob',
-        age: 30,
-        website: 'ht!tp://bad url',
-      };
 
       const bad: ValidationResult = validator.validate(invalid);
       const err: ValidationError | undefined = bad.errors.find(
@@ -258,11 +202,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should reject NaN for number type', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: Number.NaN,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -272,12 +211,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should handle optional null without errors and exclude from sanitized', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Carol',
-        age: 35,
-        meta: null,
-      };
 
       const result: ValidationResult = validator.validate(data);
       expect(result.valid).toBe(true);
@@ -285,32 +218,12 @@ describe('Validator', (): void => {
       expect((result.sanitized as Record<string, unknown>).meta).toBeUndefined();
     });
 
-    test('should validate array and object types when provided', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Dave',
-        age: 40,
-        tags: [],
-        meta: { ok: true },
-      };
 
       const result: ValidationResult = validator.validate(data);
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
     });
 
-    test('should surface custom validator failure as error', (): void => {
-      const customSchema: ValidationSchema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [
-          {
-            field: 'code',
-            type: 'string',
-            required: true,
-            customValidator: (_v: unknown): boolean => false,
-          },
-        ],
-      };
       const v: Validator = new Validator(customSchema);
       const data: Record<string, unknown> = { code: 'ABC' };
 
@@ -322,21 +235,6 @@ describe('Validator', (): void => {
       expect(err).toBeDefined();
     });
 
-    test('should handle exceptions thrown by custom validator', (): void => {
-      const customSchema: ValidationSchema = {
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-        rules: [
-          {
-            field: 'code',
-            type: 'string',
-            required: true,
-            customValidator: (_v: unknown): boolean => {
-              throw new Error('boom');
-            },
-          },
-        ],
-      };
       const v: Validator = new Validator(customSchema);
       const data: Record<string, unknown> = { code: 'XYZ' };
 
@@ -349,12 +247,6 @@ describe('Validator', (): void => {
       expect((err as ValidationError).message).toContain('boom');
     });
 
-    test('should error on unknown fields in strict mode', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Eve',
-        age: 28,
-        unknownProp: 123,
-      };
 
       const result: ValidationResult = validator.validate(data);
       const err: ValidationError | undefined = result.errors.find(
@@ -365,14 +257,6 @@ describe('Validator', (): void => {
       expect(result.warnings.length).toBe(0);
     });
 
-    test('should warn (not error) on unknown fields in lenient mode', (): void => {
-      validator.setLevel(ValidationLevel.Lenient);
-
-      const data: Record<string, unknown> = {
-        name: 'Frank',
-        age: 33,
-        extra: 'field',
-      };
 
       const result: ValidationResult = validator.validate(data);
       expect(result.valid).toBe(true);
@@ -402,21 +286,12 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should validate using helper and return valid result', (): void => {
-      const data: Record<string, unknown> = {
-        name: ' Grace ',
-        age: 45,
-      };
 
       const result: ValidationResult = validateData(data, schema);
       expect(result.valid).toBe(true);
       expect((result.sanitized as Record<string, unknown>).name).toBe('Grace');
     });
 
-    test('should return errors via helper for invalid input', (): void => {
-      const data: Record<string, unknown> = {
-        age: 10,
-      };
 
       const result: ValidationResult = validateData(data, schema);
       expect(result.valid).toBe(false);

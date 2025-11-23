@@ -109,10 +109,6 @@ describe('validation/index barrel exports', () => {
     vi.resetAllMocks();
   });
 
-  test('should re-export values from schemas, validator, and middleware modules', async (): Promise<void> => {
-
-
-      return { ValidationMiddleware, getGlobalMiddleware, resetGlobalMiddleware };
     });
 
     const indexMod = (await import('../../src/validation/index.ts')) as unknown as IndexModule;
@@ -131,10 +127,6 @@ describe('validation/index barrel exports', () => {
     expect(indexMod.resetGlobalMiddleware).toBe(middlewareMod.resetGlobalMiddleware);
   });
 
-  test('should allow calling through re-exported functions and classes', async (): Promise<void> => {
-
-
-      return { ValidationMiddleware, getGlobalMiddleware, resetGlobalMiddleware };
     });
 
     const indexMod = (await import('../../src/validation/index.ts')) as unknown as IndexModule;

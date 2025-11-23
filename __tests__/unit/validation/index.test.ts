@@ -24,7 +24,6 @@ vi.mock('./schemas.js', () => {
       this.built = true;
       return 'built';
     }
-  }
   validationLevelMock = ValidationLevel as unknown as Record<string, unknown>;
   SchemaBuilderClass = SchemaBuilder as unknown as ObjectConstructorType;
   return {
@@ -43,7 +42,6 @@ vi.mock('./validator.js', () => {
       this.validated = true;
       return true;
     }
-  }
   ValidatorClass = Validator as unknown as ObjectConstructorType;
   return {
     Validator,
@@ -69,22 +67,6 @@ vi.mock('./middleware.js', () => {
   };
 }, { virtual: true });
 
-describe('src/validation/index.ts barrel exports', () => {
-  beforeEach((): void => {
-    validateDataMock.mockReset();
-    getGlobalMiddlewareMock.mockReset();
-    resetGlobalMiddlewareMock.mockReset();
-
-    validateDataMock.mockImplementation((input?: unknown): unknown => {
-      return { ok: true, input } as Record<string, unknown>;
-    });
-    getGlobalMiddlewareMock.mockImplementation((): symbol => {
-      return Symbol('global-middleware');
-    });
-    resetGlobalMiddlewareMock.mockImplementation((): void => {
-      // no-op
-    });
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();

@@ -5,18 +5,7 @@ vi.mock('node:os', (): Record<string, unknown> => ({
   platform: vi.fn((): string => 'linux'),
 }));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
 
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
-
-  describe('constructor', (): void => {
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
 
     test('should initialize with default values', (): void => {
       const schema = builder.build();
@@ -36,31 +25,13 @@ describe('SchemaBuilder', (): void => {
     test('should not throw on basic construction', (): void => {
       expect((): SchemaBuilder => new SchemaBuilder('NoThrow')).toBeDefined();
     });
-  });
 
-  describe('addRule', (): void => {
-      builder.addRule(rule);
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      expect(schema.rules[0]).toMatchObject(rule);
-    });
 
       expect((): void => {
         builder.addRule(complexRule as unknown as Parameters<SchemaBuilder['addRule']>[0]);
       }).not.toThrow();
     });
-  });
 
-  describe('stringField', (): void => {
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      expect(schema.rules[0]).toMatchObject({
-        field: 'username',
-        type: 'string',
-        required: true,
-        minLength: 3,
-        maxLength: 20,
-      });
       expect(schema.rules[0].pattern).toBeInstanceOf(RegExp);
       expect((schema.rules[0].pattern as RegExp).test('abc')).toBe(true);
       expect((schema.rules[0].pattern as RegExp).test('ABC')).toBe(false);
@@ -74,25 +45,13 @@ describe('SchemaBuilder', (): void => {
         type: 'string',
         required: false,
       });
-    });
 
     test('should not throw with empty options', (): void => {
       expect((): void => {
         builder.stringField('emptyOptions', true, undefined);
       }).not.toThrow();
     });
-  });
 
-  describe('numberField', (): void => {
-      const schema = builder.build();
-      expect(schema.rules[0]).toMatchObject({
-        field: 'score',
-        type: 'number',
-        required: true,
-        min: 0,
-        max: 100,
-      });
-    });
 
     test('should add an optional number field', (): void => {
       builder.numberField('rating', false);
@@ -102,8 +61,6 @@ describe('SchemaBuilder', (): void => {
         type: 'number',
         required: false,
       });
-    });
-  });
 
   describe('emailField', (): void => {
     test('should add a required email field with default error message and pattern', (): void => {
@@ -127,7 +84,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules[0]).toMatchObject({
         errorMessage: 'Custom email message',
       });
-    });
 
     test('should allow optional email field', (): void => {
       builder.emailField('optionalEmail', false);
@@ -137,8 +93,6 @@ describe('SchemaBuilder', (): void => {
         type: 'email',
         required: false,
       });
-    });
-  });
 
   describe('urlField', (): void => {
     test('should add a required url field with default error message', (): void => {
@@ -267,8 +221,6 @@ describe('SchemaBuilder', (): void => {
     });
   });
 
-  describe('build', (): void => {
-        .numberField('age', false, { min: 0 })
         .allowUnknown(true)
         .setLevel(ValidationLevel.Lenient);
       const schema = builder.build();

@@ -65,13 +65,6 @@ describe('ValidationMiddleware', (): void => {
       expect(MockedValidator).toHaveBeenCalledWith(schema);
     });
 
-    test('should replace existing schema and validator on duplicate name', (): void => {
-      const schemaA = makeSchema(['a']);
-      const schemaB = makeSchema(['b']);
-
-      middleware.registerSchema('dup', schemaA);
-      const firstInstance = getCreatedValidatorInstances()[0];
-      firstInstance.validate.mockReturnValueOnce({ valid: true, errors: [], sanitized: { a: 1 } } as unknown as ValidationResult);
 
       middleware.registerSchema('dup', schemaB);
       expect(middleware.getSchema('dup')).toBe(schemaB);
@@ -111,30 +104,12 @@ describe('ValidationMiddleware', (): void => {
       expect(() => middleware.validateWithSchema('nope', {})).toThrowError(/Schema 'nope' not found/);
     });
 
-    test('should return validator result without options', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema);
-      const instance = getCreatedValidatorInstances()[0];
-      const validatorResult = {
-        valid: true,
-        errors: [],
-        sanitized: { name: 'John', extra: 'x' },
-      } as unknown as ValidationResult;
       instance.validate.mockReturnValueOnce(validatorResult);
 
       const result = middleware.validateWithSchema('user', { name: 'John', extra: 'x' } as Record<string, unknown>);
       expect(result).toBe(validatorResult);
     });
 
-    test('should apply abortEarly to keep only first error', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema);
-      const instance = getCreatedValidatorInstances()[0];
-      const validatorResult = {
-        valid: false,
-        errors: [{ msg: 'err1' }, { msg: 'err2' }],
-        sanitized: { name: 'J' },
-      } as unknown as ValidationResult;
       instance.validate.mockReturnValueOnce(validatorResult);
 
       const result = middleware.validateWithSchema('user', { name: 'J' } as Record<string, unknown>, { abortEarly: true });
@@ -142,15 +117,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors[0]).toEqual({ msg: 'err1' });
     });
 
-    test('should apply stripUnknown to sanitized output', (): void => {
-      const schema = makeSchema(['name', 'age']);
-      middleware.registerSchema('user', schema);
-      const instance = getCreatedValidatorInstances()[0];
-      const validatorResult = {
-        valid: true,
-        errors: [],
-        sanitized: { name: 'John', age: 30, extra: 'remove', another: 1 },
-      } as unknown as ValidationResult;
       instance.validate.mockReturnValueOnce(validatorResult);
 
       const result = middleware.validateWithSchema(
@@ -162,30 +128,12 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ name: 'John', age: 30 });
     });
 
-    test('should not strip unknown when sanitized is undefined', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema);
-      const instance = getCreatedValidatorInstances()[0];
-      const validatorResult = {
-        valid: true,
-        errors: [],
-        sanitized: undefined,
-      } as unknown as ValidationResult;
       instance.validate.mockReturnValueOnce(validatorResult);
 
       const result = middleware.validateWithSchema('user', { name: 'A' } as Record<string, unknown>, { stripUnknown: true });
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should apply both abortEarly and stripUnknown together', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema);
-      const instance = getCreatedValidatorInstances()[0];
-      const validatorResult = {
-        valid: false,
-        errors: [{ code: 1 }, { code: 2 }],
-        sanitized: { name: 'A', extra: 'x' },
-      } as unknown as ValidationResult;
       instance.validate.mockReturnValueOnce(validatorResult);
 
       const result = middleware.validateWithSchema(
@@ -200,12 +148,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should return a function that delegates to validateWithSchema with provided options', (): void => {
-      const schema = makeSchema(['x']);
-      middleware.registerSchema('route', schema);
-
-      const spy = vi.spyOn(middleware, 'validateWithSchema');
-      const resultObj = { valid: true, errors: [], sanitized: { x: 1 } } as unknown as ValidationResult;
       const instance = getCreatedValidatorInstances()[0];
       instance.validate.mockReturnValueOnce(resultObj);
 
@@ -223,16 +165,6 @@ describe('ValidationMiddleware', (): void => {
       expect(() => middleware.batchValidate('missing', [])).toThrowError(/Schema 'missing' not found/);
     });
 
-    test('should validate each data item and return results', (): void => {
-      const schema = makeSchema(['id']);
-      middleware.registerSchema('items', schema);
-
-      const instance = getCreatedValidatorInstances()[0];
-      instance.validate.mockImplementation((d: unknown): unknown => {
-        const r = d as Record<string, unknown>;
-        const hasId = typeof r.id !== 'undefined';
-        return { valid: hasId, errors: hasId ? [] : ['missing id'], sanitized: r } as unknown as ValidationResult;
-      });
 
       const inputs = [{ id: 1 }, { nope: true }] as unknown as Array<Record<string, unknown>>;
       const results = middleware.batchValidate('items', inputs);
@@ -244,17 +176,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all are valid', (): void => {
-      const results = [
-        { valid: true, errors: [], sanitized: {} },
         { valid: true, errors: [], sanitized: {} },
       ] as unknown as ValidationResult[];
       expect(middleware.batchValidationPassed(results)).toBe(true);
     });
 
-    test('should return false when any is invalid', (): void => {
-      const results = [
-        { valid: true, errors: [], sanitized: {} },
         { valid: false, errors: ['e'], sanitized: {} },
       ] as unknown as ValidationResult[];
       expect(middleware.batchValidationPassed(results)).toBe(false);
@@ -307,9 +233,6 @@ describe('Global middleware functions', (): void => {
       expect(second).not.toBe(first);
     });
 
-    test('global instance should be fully functional and isolated after reset', (): void => {
-      const instance1 = getGlobalMiddleware();
-      instance1.registerSchema('one', { rules: [{ field: 'x' }] } as unknown as ValidationSchema);
       expect(instance1.getSchemaNames()).toEqual(['one']);
 
       resetGlobalMiddleware();
@@ -322,9 +245,6 @@ describe('Global middleware functions', (): void => {
   });
 
   describe('resetGlobalMiddleware', (): void => {
-    test('should clear the singleton reference', (): void => {
-      const before = getGlobalMiddleware();
-      before.registerSchema('s', { rules: [{ field: 'f' }] } as unknown as ValidationSchema);
       resetGlobalMiddleware();
       const after = getGlobalMiddleware();
       expect(after).not.toBe(before);

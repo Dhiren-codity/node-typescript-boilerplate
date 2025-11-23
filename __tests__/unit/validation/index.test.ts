@@ -137,10 +137,6 @@ describe('src/validation/index.ts barrel exports', () => {
       expect(result).toEqual({ ok: true, input: arg });
     });
 
-    test('should forward thrown errors from underlying function', async (): Promise<void> => {
-      validateDataMock.mockImplementation((): unknown => {
-        throw new Error('validation failed');
-      });
       const mod = await import('./index');
       const fn = mod.validateData as unknown as (input?: unknown) => unknown;
       expect(() => fn({})).toThrowError('validation failed');

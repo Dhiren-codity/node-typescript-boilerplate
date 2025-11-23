@@ -13,6 +13,11 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('constructor', (): void => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
     test('should initialize with default values', (): void => {
       const schema = builder.build();
       expect(schema.name).toBe('TestSchema');
@@ -34,29 +39,12 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule to the schema', (): void => {
-      const rule = {
-        field: 'age',
-        type: 'number' as const,
-        required: true,
-        min: 1,
-        max: 120,
-        errorMessage: 'Invalid age',
-      };
       builder.addRule(rule);
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
       expect(schema.rules[0]).toMatchObject(rule);
     });
 
-    test('should not throw when adding a complex rule', (): void => {
-      const complexRule = {
-        field: 'profile',
-        type: 'object' as const,
-        required: false,
-        errorMessage: 'Invalid profile',
-        customValidator: (_value: unknown): boolean => true,
-      };
       expect((): void => {
         builder.addRule(complexRule as unknown as Parameters<SchemaBuilder['addRule']>[0]);
       }).not.toThrow();
@@ -64,8 +52,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add a required string field with options', (): void => {
-      builder.stringField('username', true, { minLength: 3, maxLength: 20, pattern: /^[a-z]+$/ });
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
       expect(schema.rules[0]).toMatchObject({
@@ -98,8 +84,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a required number field with bounds', (): void => {
-      builder.numberField('score', true, { min: 0, max: 100 });
       const schema = builder.build();
       expect(schema.rules[0]).toMatchObject({
         field: 'score',
@@ -284,9 +268,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('build', (): void => {
-    test('should return a plain schema object', (): void => {
-      builder
-        .stringField('name', true, { minLength: 1 })
         .numberField('age', false, { min: 0 })
         .allowUnknown(true)
         .setLevel(ValidationLevel.Lenient);

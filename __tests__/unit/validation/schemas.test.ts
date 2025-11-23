@@ -2,12 +2,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel, type ValidationRule, type ValidationSchema } from '../../src/validation/schemas';
 
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.restoreAllMocks();
@@ -29,14 +23,7 @@ describe('SchemaBuilder', (): void => {
       expect(schema.level).toBe(ValidationLevel.Strict);
       expect(schema.rules).toEqual([]);
     });
-  });
 
-  describe('addRule', (): void => {
-      builder.addRule(rule);
-      const schema: ValidationSchema = builder.build();
-      expect(schema.rules.length).toBe(1);
-      expect(schema.rules[0]).toEqual(rule);
-    });
 
       const rule2: ValidationRule = { field: 'second', type: 'boolean', required: false };
       builder.addRule(rule1).addRule(rule2);
@@ -57,7 +44,6 @@ describe('SchemaBuilder', (): void => {
         builder.addRule(rule);
       }).not.toThrow();
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string field by default', (): void => {
@@ -85,7 +71,6 @@ describe('SchemaBuilder', (): void => {
         builder.stringField('title', true, undefined);
       }).not.toThrow();
     });
-  });
 
   describe('numberField', (): void => {
     test('should add a required number field by default', (): void => {
@@ -114,7 +99,6 @@ describe('SchemaBuilder', (): void => {
         builder.numberField('score', true, undefined);
       }).not.toThrow();
     });
-  });
 
   describe('emailField', (): void => {
     test('should add a required email field with default message and regex', (): void => {
@@ -148,7 +132,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule).toBeDefined();
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('urlField', (): void => {
     test('should add a required url field with default error message', (): void => {
@@ -170,7 +153,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Bad URL');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add a required boolean field by default', (): void => {

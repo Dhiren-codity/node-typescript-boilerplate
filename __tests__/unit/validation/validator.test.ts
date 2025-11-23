@@ -10,63 +10,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let baseSchema: ConstructorParameters<typeof Validator>[0];
-
-  beforeEach((): void => {
-    baseSchema = {
-      rules: [
-        {
-          field: 'username',
-          type: 'string',
-          required: true,
-          minLength: 3,
-          maxLength: 10,
-        },
-        {
-          field: 'age',
-          type: 'number',
-          min: 18,
-          max: 60,
-        },
-        {
-          field: 'email',
-          type: 'email',
-        },
-        {
-          field: 'website',
-          type: 'url',
-        },
-        {
-          field: 'tags',
-          type: 'array',
-        },
-        {
-          field: 'meta',
-          type: 'object',
-        },
-        {
-          field: 'isActive',
-          type: 'boolean',
-        },
-        {
-          field: 'code',
-          type: 'string',
-          pattern: /^[A-Z]{3}-\d{3}$/,
-        },
-        {
-          field: 'custom',
-          type: 'string',
-          customValidator: (_value: unknown): boolean => true,
-        },
-      ],
-      allowUnknownFields: false,
-      level: ValidationLevel.Strict,
-    } as unknown as ConstructorParameters<typeof Validator>[0];
-
-    validator = new Validator(baseSchema);
-  });
 
 
 
@@ -82,7 +25,6 @@ describe('Validator', (): void => {
       expect(returnedSchema).toBeDefined();
       expect(Array.isArray(returnedSchema.rules)).toBe(true);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return a new object (shallow copy)', (): void => {
@@ -96,7 +38,6 @@ describe('Validator', (): void => {
       returned.level = ValidationLevel.Lenient;
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('getLevel and setLevel', (): void => {
     test('should get and set validation level', (): void => {
@@ -104,18 +45,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-
-      expect(result.valid).toBe(false);
-      expect(result.sanitized).toBeUndefined();
-      expect(result.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            field: 'username',
-            rule: 'required',
-          }),
         ]),
       );
     });
@@ -362,12 +292,7 @@ describe('Validator', (): void => {
         expect.arrayContaining([expect.objectContaining({ field: 'age', rule: 'type' })]),
       );
     });
-  });
 
-  describe('validateData helper', (): void => {
-
-      const result = validateData(
-        { name: '  Zara  ', count: 3 } as Record<string, unknown>,
         simpleSchema,
       );
 
@@ -385,5 +310,3 @@ describe('Validator', (): void => {
       );
       expect(result.sanitized).toBeUndefined();
     });
-  });
-});

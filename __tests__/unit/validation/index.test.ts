@@ -11,13 +11,11 @@ vi.mock('../src/validation/schemas.js', () => {
     build(): { name: string } {
       return { name: this.label };
     }
-  }
 
   return {
     ValidationLevel,
     SchemaBuilder,
   };
-});
 vi.mock('../src/validation/validator.js', () => {
   class Validator {
     private readonly schema: unknown;
@@ -33,8 +31,6 @@ vi.mock('../src/validation/validator.js', () => {
 vi.mock('../src/validation/middleware.js', () => {
   let throwFlag = false;
 
-  }
-  }
   class ValidationMiddleware {
     private readonly options?: Record<string, unknown>;
     public readonly handle: (req: unknown, _res: unknown, next: unknown) => unknown;
@@ -49,14 +45,11 @@ vi.mock('../src/validation/middleware.js', () => {
       });
 
 
-});
 
 
 
 // Mocks for the underlying modules that index.ts re-exports
 
-    }
-  }
 
   const validateData = vi.fn((data: unknown) => {
     if (data === 'throw') {
@@ -69,7 +62,6 @@ vi.mock('../src/validation/middleware.js', () => {
     Validator,
     validateData,
   };
-});
 
 
   const globalMiddleware = { name: 'global-mw' };
@@ -96,11 +88,6 @@ vi.mock('../src/validation/middleware.js', () => {
     __setThrowFlag,
   };
 
-describe('validation/index barrel exports', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-    vi.resetModules();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -146,21 +133,8 @@ describe('validation/index barrel exports', () => {
       expect(levels.HIGH).toBe('HIGH');
       expect(Object.keys(levels).sort()).toEqual(['HIGH', 'LOW']);
     });
-  });
 
-  describe('SchemaBuilder', () => {
 
-      const builder = new SchemaBuilderCtor('my-schema');
-      const built = builder.build();
-
-      expect(built).toEqual({ name: 'my-schema' });
-    });
-  });
-
-  describe('Validator', () => {
-      type MockedFn = ReturnType<typeof vi.fn>;
-
-      const instance = new ValidatorCtor({ type: 'object' });
       const result = instance.validate({ foo: 'bar' });
       const validateSpy = instance.validate as unknown as MockedFn;
 
@@ -178,8 +152,6 @@ describe('validation/index barrel exports', () => {
     });
   });
 
-  describe('validateData', () => {
-      const result = validateData({ a: 1 });
 
       expect(result.ok).toBe(true);
       expect(result.data).toEqual({ a: 1 });
@@ -193,11 +165,6 @@ describe('validation/index barrel exports', () => {
     });
   });
 
-  describe('ValidationMiddleware', () => {
-      type MockedFn = ReturnType<typeof vi.fn>;
-      const MiddlewareCtor = api.ValidationMiddleware as new (opts?: Record<string, unknown>) => MiddlewareInstance;
-
-      const instance = new MiddlewareCtor({ strict: true });
       const nextValue = { next: true };
       const returned = instance.handle({ shouldThrow: false }, {}, nextValue);
       const handleSpy = instance.handle as unknown as MockedFn;

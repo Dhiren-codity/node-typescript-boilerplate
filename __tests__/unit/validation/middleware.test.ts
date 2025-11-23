@@ -28,25 +28,15 @@ vi.mock('./validator.js', (): Record<string, unknown> => {
           errors,
           sanitized,
         };
-      });
 
 
 // Mock the Validator dependency used by ValidationMiddleware
-    }
-  }
 
   return {
     Validator: MockValidator,
   };
-});
 
 
-describe('ValidationMiddleware', (): void => {
-  let middleware: ValidationMiddleware;
-
-  const createSampleSchema = (): Record<string, unknown> => ({
-    rules: [{ field: 'a' }, { field: 'b' }],
-  });
 
   beforeEach((): void => {
     middleware = new ValidationMiddleware();
@@ -63,7 +53,6 @@ describe('ValidationMiddleware', (): void => {
       expect(middleware.getSchemaCount()).toBe(0);
       expect(middleware.getSchemaNames()).toEqual([]);
     });
-  });
 
   describe('registerSchema', (): void => {
     test('should register schema and create validator', (): void => {
@@ -73,7 +62,6 @@ describe('ValidationMiddleware', (): void => {
       expect(middleware.getSchemaNames()).toContain('user');
       expect(middleware.getSchemaCount()).toBe(1);
     });
-  });
 
   describe('unregisterSchema', (): void => {
     test('should unregister existing schema and return true', (): void => {
@@ -94,7 +82,6 @@ describe('ValidationMiddleware', (): void => {
       const deleted = middleware.unregisterSchema('unknown');
       expect(deleted).toBe(false);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return undefined for non-existent schema', (): void => {
@@ -106,7 +93,6 @@ describe('ValidationMiddleware', (): void => {
       middleware.registerSchema('user', schema as unknown as never);
       expect(middleware.getSchema('user')).toBe(schema);
     });
-  });
 
   describe('validateWithSchema', (): void => {
     test('should throw when schema is not found', (): void => {
@@ -144,15 +130,11 @@ describe('ValidationMiddleware', (): void => {
       const result = middleware.validateWithSchema('user', data, { stripUnknown: true });
       expect(result.sanitized).toBeUndefined();
     });
-  });
 
-  describe('createMiddleware', (): void => {
-      const data: Record<string, unknown> = { errorCount: 2 };
 
       const result = await mw(data);
       expect(result.errors).toHaveLength(1);
     });
-  });
 
   describe('batchValidate', (): void => {
     test('should throw when schema is not found', (): void => {
@@ -172,10 +154,7 @@ describe('ValidationMiddleware', (): void => {
       expect(results[1].valid).toBe(false);
       expect(results[2].valid).toBe(true);
     });
-  });
 
-  describe('batchValidationPassed', (): void => {
-        { valid: true, errors: [] },
       ] as unknown as { valid: boolean; errors: unknown[] }[]);
       expect(allValid).toBe(true);
     });
@@ -189,7 +168,6 @@ describe('ValidationMiddleware', (): void => {
       const empty = middleware.batchValidationPassed([]);
       expect(empty).toBe(true);
     });
-  });
 
   describe('getSchemaNames', (): void => {
     test('should return all registered schema names', (): void => {
@@ -203,7 +181,6 @@ describe('ValidationMiddleware', (): void => {
       expect(names).toContain('userA');
       expect(names).toContain('userB');
     });
-  });
 
   describe('getSchemaCount', (): void => {
     test('should return the count of registered schemas', (): void => {
@@ -212,7 +189,6 @@ describe('ValidationMiddleware', (): void => {
       middleware.registerSchema('user', schema as unknown as never);
       expect(middleware.getSchemaCount()).toBe(1);
     });
-  });
 
   describe('clearAll', (): void => {
     test('should clear schemas and validators', (): void => {
@@ -230,10 +206,6 @@ describe('ValidationMiddleware', (): void => {
   });
 });
 
-describe('Global middleware instance', (): void => {
-  afterEach((): void => {
-    resetGlobalMiddleware();
-  });
 
   describe('getGlobalMiddleware', (): void => {
     test('should return a singleton instance', (): void => {

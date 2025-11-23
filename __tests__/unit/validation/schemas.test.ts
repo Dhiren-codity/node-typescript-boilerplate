@@ -40,18 +40,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule and preserve it in schema', (): void => {
-      const customValidator = (value: unknown): boolean => typeof value === 'string' && value === 'ok';
-      const rule: ValidationRule = {
-        field: 'custom',
-        type: 'string',
-        required: true,
-        minLength: 2,
-        maxLength: 10,
-        pattern: /^ok$/,
-        customValidator,
-        errorMessage: 'Custom error',
-      };
 
       const returned = builder.addRule(rule);
       expect(returned).toBe(builder);
@@ -62,8 +50,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules[0].customValidator).toBe(customValidator);
     });
 
-    test('should maintain insertion order of rules', (): void => {
-      const r1: ValidationRule = { field: 'a', type: 'string', required: true };
       const r2: ValidationRule = { field: 'b', type: 'number', required: false };
       builder.addRule(r1).addRule(r2);
       const schema = builder.build();
@@ -85,13 +71,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.errorMessage).toBeUndefined();
     });
 
-    test('should add string field with options and required false', (): void => {
-      builder.stringField('nickname', false, {
-        minLength: 3,
-        maxLength: 20,
-        pattern: /^[A-Za-z]+$/,
-        errorMessage: 'Invalid nickname',
-      });
       const schema = builder.build();
       const rule = schema.rules.find((r): boolean => r.field === 'nickname');
       expect(rule).toBeDefined();
@@ -125,8 +104,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.errorMessage).toBeUndefined();
     });
 
-    test('should add number field with min, max, and custom error', (): void => {
-      builder.numberField('score', false, { min: 0, max: 100, errorMessage: 'Invalid score' });
       const schema = builder.build();
       const rule = schema.rules.find((r): boolean => r.field === 'score');
       expect(rule).toBeDefined();
@@ -259,14 +236,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema1.rules).toBe(schema2.rules);
     });
 
-    test('should reflect external mutations to rules array (shallow copy behavior)', (): void => {
-      builder.stringField('alpha');
-      const schema1 = builder.build();
-      const externalRule: ValidationRule = {
-        field: 'external',
-        type: 'boolean',
-        required: false,
-      };
       schema1.rules.push(externalRule);
       const schema2 = builder.build();
       const added = schema2.rules.find((r): boolean => r.field === 'external');
@@ -284,11 +253,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('fluent API', (): void => {
-    test('should support method chaining for building complex schema', (): void => {
-      const chained = builder
-        .setLevel(ValidationLevel.Strict)
-        .allowUnknown(true)
-        .stringField('title', true, { minLength: 1 })
         .numberField('count', false, { min: 0 })
         .emailField('contact', true)
         .urlField('link', false, 'Bad URL')

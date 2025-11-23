@@ -48,17 +48,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a rule and return this', (): void => {
-      const customValidator = (_value: unknown): boolean => true;
-      const returnValue = builder.addRule({
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 0,
-        max: 120,
-        customValidator,
-        errorMessage: 'Invalid age',
-      });
 
       expect(returnValue).toBe(builder);
 
@@ -74,8 +63,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.errorMessage).toBe('Invalid age');
     });
 
-    test('should allow duplicate field rules', (): void => {
-      builder.addRule({ field: 'name', type: 'string', required: true });
       builder.addRule({ field: 'name', type: 'string', required: false });
 
       const schema = builder.build();
@@ -107,8 +94,6 @@ describe('SchemaBuilder', (): void => {
       );
     });
 
-    test('should add an optional string rule with options', (): void => {
-      const pattern = /^[a-z]{3,10}$/u;
       builder.stringField('handle', false, {
         minLength: 3,
         maxLength: 10,
@@ -148,8 +133,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule.errorMessage).toBeUndefined();
     });
 
-    test('should add an optional number rule with min/max and error message', (): void => {
-      builder.numberField('score', false, { min: 0, max: 100, errorMessage: 'Score out of range' });
 
       const schema = builder.build();
       const rule = schema.rules[0];

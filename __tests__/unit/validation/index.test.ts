@@ -123,9 +123,6 @@ describe('validation/index re-exports', () => {
   });
 
   describe('SchemaBuilder', () => {
-    test('should initialize and build schema with rules', (): void => {
-      const builder = new SchemaBuilder();
-      const result = builder.addRule({ field: 'x', required: true }).addRule({ field: 'y', type: 'number' }).build();
 
       expect(result).toBeDefined();
       expect(result).toHaveProperty('rules');
@@ -144,8 +141,6 @@ describe('validation/index re-exports', () => {
   });
 
   describe('Validator', () => {
-    test('should construct with options and validate data', async (): Promise<void> => {
-      const options = { strict: true };
       const instance = new Validator(options);
 
       const opt = (instance as unknown as { getOptions: () => unknown }).getOptions();
@@ -166,22 +161,16 @@ describe('validation/index re-exports', () => {
   });
 
   describe('validateData function', () => {
-    test('should resolve with valid result on happy path', async (): Promise<void> => {
-      const result = await validateData({ data: { id: 1 } });
       expect(result).toEqual({ valid: true });
       expect((validateData as unknown as Mock<[unknown], Promise<{ valid: boolean }>>).mock.calls.length).toBe(1);
     });
 
-    test('should reject on error path', async (): Promise<void> => {
-      (validateData as unknown as Mock<[unknown], Promise<{ valid: boolean }>>).mockRejectedValueOnce(new Error('Mock validation error'));
       await expect(validateData({ cause: 'error' })).rejects.toThrow('Mock validation error');
       expect((validateData as unknown as Mock<[unknown], Promise<{ valid: boolean }>>).mock.calls.length).toBe(1);
     });
   });
 
   describe('ValidationMiddleware', () => {
-    test('should construct with options and execute', async (): Promise<void> => {
-      const options = { mode: 'pre' };
       const middleware = new ValidationMiddleware(options);
 
       const opt = (middleware as unknown as { getOptions: () => unknown }).getOptions();

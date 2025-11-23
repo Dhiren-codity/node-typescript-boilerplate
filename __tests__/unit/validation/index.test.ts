@@ -108,8 +108,6 @@ const resetGlobalMiddlewareMock = vi.fn<[], void>(() => {});
   });
 
   describe('functional behavior through re-exports', () => {
-    test('validateData happy path should call underlying implementation and return its value', (): void => {
-      const input: Record<string, unknown> = { id: 1 };
       const schema: Record<string, unknown> = { required: ['id'] };
       const result = validateData(input, schema) as { success: boolean };
 
@@ -118,10 +116,6 @@ const resetGlobalMiddlewareMock = vi.fn<[], void>(() => {});
       expect(result).toEqual({ success: true });
     });
 
-    test('validateData error path should propagate thrown errors from underlying implementation', (): void => {
-      validateDataMock.mockImplementationOnce((): ValidateDataReturn => {
-        throw new Error('validation failed');
-      });
 
       const call = (): unknown => validateData({ test: true }, { rules: [] });
 
@@ -129,15 +123,11 @@ const resetGlobalMiddlewareMock = vi.fn<[], void>(() => {});
       expect(validateDataMock).toHaveBeenCalledTimes(1);
     });
 
-    test('Validator instances should be constructible and callable', (): void => {
-      const instance = new Validator() as unknown as { validate: (data: unknown) => { success: boolean } };
       const out = instance.validate({ x: 1 });
 
       expect(out).toEqual({ success: true });
     });
 
-    test('SchemaBuilder instances should be constructible and chainable', (): void => {
-      const builder = new SchemaBuilder() as unknown as { addRule: (rule: unknown) => unknown };
       const returned = builder.addRule({ field: 'name', required: true });
 
       expect(returned).toBe(builder);

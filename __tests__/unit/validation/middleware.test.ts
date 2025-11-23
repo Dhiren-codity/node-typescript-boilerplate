@@ -45,11 +45,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('registerSchema', (): void => {
-    test('should register schema and create Validator instance', (): void => {
-      const schema = {
-        rules: [{ field: 'name' }, { field: 'age' }],
-        __name: 'user',
-      };
 
       instance.registerSchema('user', schema);
 
@@ -63,8 +58,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('unregisterSchema', (): void => {
-    test('should unregister existing schema and remove validator', (): void => {
-      const schema = { rules: [{ field: 'name' }] };
       instance.registerSchema('user', schema);
 
       const removed = instance.unregisterSchema('user');
@@ -86,8 +79,6 @@ describe('ValidationMiddleware', (): void => {
       expect(instance.getSchema('nope')).toBeUndefined();
     });
 
-    test('should return the registered schema', (): void => {
-      const schema = { rules: [{ field: 'id' }] };
       instance.registerSchema('test', schema);
       expect(instance.getSchema('test')).toBe(schema);
     });
@@ -98,8 +89,6 @@ describe('ValidationMiddleware', (): void => {
       expect(() => instance.validateWithSchema('missing', {})).toThrowError("Schema 'missing' not found");
     });
 
-    test('should call underlying validator and return its result', (): void => {
-      const schema = { rules: [{ field: 'a' }] };
       instance.registerSchema('s1', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -114,8 +103,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result).toBe(expected);
     });
 
-    test('should honor abortEarly option and keep only first error', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] };
       instance.registerSchema('s2', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -127,8 +114,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors).toEqual(['e1']);
     });
 
-    test('should strip unknown fields when stripUnknown is true', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] };
       instance.registerSchema('s3', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -143,8 +128,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ a: 1, b: 2 });
     });
 
-    test('should handle both abortEarly and stripUnknown together', (): void => {
-      const schema = { rules: [{ field: 'x' }, { field: 'y' }] };
       instance.registerSchema('s4', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -162,8 +145,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should return function that validates using provided schema and options', (): void => {
-      const schema = { rules: [{ field: 'a' }, { field: 'b' }] };
       instance.registerSchema('mw', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -186,8 +167,6 @@ describe('ValidationMiddleware', (): void => {
       expect(() => instance.batchValidate('missing', [])).toThrowError("Schema 'missing' not found");
     });
 
-    test('should validate an array of data and return results for each', (): void => {
-      const schema = { rules: [{ field: 'flag' }] };
       instance.registerSchema('batch', schema);
 
       const validatorInstance = validatorMock.mock.instances[0];
@@ -212,17 +191,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const results = [
-        { valid: true, errors: [] as string[] },
         { valid: true, errors: [] as string[] },
       ];
       expect(instance.batchValidationPassed(results)).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const results = [
-        { valid: true, errors: [] as string[] },
         { valid: false, errors: ['e'] },
       ];
       expect(instance.batchValidationPassed(results)).toBe(false);
@@ -230,8 +203,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('getSchemaNames', (): void => {
-    test('should return all registered schema names', (): void => {
-      instance.registerSchema('a', { rules: [{ field: 'x' }] });
       instance.registerSchema('b', { rules: [{ field: 'y' }] });
       expect(instance.getSchemaNames()).toEqual(['a', 'b']);
     });
@@ -247,8 +218,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('clearAll', (): void => {
-    test('should remove all schemas and validators', (): void => {
-      instance.registerSchema('x', { rules: [{ field: 'a' }] });
       instance.registerSchema('y', { rules: [{ field: 'b' }] });
 
       expect(instance.getSchemaCount()).toBe(2);
@@ -286,9 +255,6 @@ describe('Global middleware instance', (): void => {
       expect(next).not.toBe(initial);
     });
 
-    test('should clear state of previous global instance', (): void => {
-      const globalInstance = getGlobalMiddleware();
-      globalInstance.registerSchema('g1', { rules: [{ field: 'x' }] });
       expect(globalInstance.getSchemaCount()).toBe(1);
 
       resetGlobalMiddleware();

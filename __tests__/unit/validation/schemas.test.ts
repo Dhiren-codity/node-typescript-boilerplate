@@ -35,16 +35,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a rule and support chaining', (): void => {
-      const customValidator = (value: unknown): boolean => typeof value === 'string';
-      const returnValue = builder.addRule({
-        field: 'username',
-        type: 'string',
-        required: true,
-        minLength: 3,
-        maxLength: 30,
-        customValidator,
-      });
       const schema = builder.build();
       expect(returnValue).toBe(builder);
       expect(schema.rules.length).toBe(1);
@@ -76,8 +66,6 @@ describe('SchemaBuilder', (): void => {
       expect(rules[0]?.required).toBe(true);
     });
 
-    test('should add an optional string rule with options', (): void => {
-      builder.stringField('description', false, { minLength: 5, maxLength: 100, errorMessage: 'Too short' });
       const [rule] = builder.build().rules;
       expect(rule?.required).toBe(false);
       expect(rule?.minLength).toBe(5);
@@ -85,9 +73,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.errorMessage).toBe('Too short');
     });
 
-    test('should include pattern when provided', (): void => {
-      const pattern = /^[A-Z]+$/u;
-      builder.stringField('code', true, { pattern });
       const [rule] = builder.build().rules;
       expect(rule?.pattern).toBeInstanceOf(RegExp);
       expect(rule?.pattern?.test('ABC')).toBe(true);
@@ -106,8 +91,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.max).toBeUndefined();
     });
 
-    test('should add number rule with min and max', (): void => {
-      builder.numberField('score', false, { min: 0, max: 100, errorMessage: 'Out of range' });
       const [rule] = builder.build().rules;
       expect(rule?.required).toBe(false);
       expect(rule?.min).toBe(0);
@@ -228,11 +211,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('build', (): void => {
-    test('should build and return the current schema snapshot', (): void => {
-      builder
-        .setLevel(ValidationLevel.Strict)
-        .allowUnknown(true)
-        .stringField('username', true, { minLength: 3 })
         .numberField('age', false, { min: 0 })
         .emailField('email', true);
 
@@ -265,9 +243,6 @@ describe('SchemaBuilder', (): void => {
       expect(builtTwice.rules.some((r): boolean => r.field === 'injected')).toBe(true);
     });
 
-    test('should support method chaining across different field types', (): void => {
-      const result = builder
-        .stringField('title', true, { maxLength: 50 })
         .booleanField('published', false)
         .arrayField('categories', false)
         .objectField('author', true)

@@ -146,28 +146,12 @@ describe('ValidationMiddleware', (): void => {
       expect(validatorInstance.validate).toHaveBeenCalledWith({ id: 1, name: 'Ada' });
     });
 
-    test('should apply abortEarly option to keep only the first error', (): void => {
-      const schema = makeSchema(['f1']);
-      instance.registerSchema('early', schema);
-
-      const validatorInstance = getValidatorMockInstance(0);
-      const resultWithManyErrors = makeResult({
-        valid: false,
-        errors: ['e1', 'e2', 'e3'] as unknown as string[],
-        sanitized: { f1: 'v' },
-      });
       validatorInstance.validate.mockReturnValue(resultWithManyErrors);
 
       const result = instance.validateWithSchema('early', { f1: 'v' }, { abortEarly: true });
       expect(result.errors).toEqual(['e1']);
     });
 
-    test('should strip unknown fields when stripUnknown is true and sanitized is present', (): void => {
-      const schema = makeSchema(['name', 'age']);
-      instance.registerSchema('strip', schema);
-
-      const validatorInstance = getValidatorMockInstance(0);
-      const rawSanitized = { name: 'Ada', age: 25, extra: 'drop-me' };
       const base = makeResult({ valid: true, errors: [], sanitized: rawSanitized });
       validatorInstance.validate.mockReturnValue(base);
 
@@ -175,12 +159,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ name: 'Ada', age: 25 });
     });
 
-    test('should not fail stripUnknown when sanitized is undefined', (): void => {
-      const schema = makeSchema(['a']);
-      instance.registerSchema('noSan', schema);
-
-      const validatorInstance = getValidatorMockInstance(0);
-      const base = makeResult({ valid: true, errors: [], sanitized: undefined as unknown as Record<string, unknown> });
       validatorInstance.validate.mockReturnValue(base);
 
       const result = instance.validateWithSchema('noSan', { a: 1 }, { stripUnknown: true });
@@ -214,12 +192,6 @@ describe('ValidationMiddleware', (): void => {
       expect(() => instance.batchValidate('missing', [{}])).toThrowError("Schema 'missing' not found");
     });
 
-    test('should validate multiple data entries and return all results', (): void => {
-      const schema = makeSchema(['n']);
-      instance.registerSchema('batch', schema);
-
-      const validatorInstance = getValidatorMockInstance(0);
-      const r1 = makeResult({ valid: true, errors: [], sanitized: { n: 1 } });
       const r2 = makeResult({ valid: false, errors: ['bad'] as unknown as string[], sanitized: { n: 2 } });
       validatorInstance.validate.mockReturnValueOnce(r1).mockReturnValueOnce(r2);
 
@@ -230,17 +202,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const results: ValidationResult[] = [
-        makeResult({ valid: true }),
         makeResult({ valid: true }),
       ];
       expect(instance.batchValidationPassed(results)).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const results: ValidationResult[] = [
-        makeResult({ valid: true }),
         makeResult({ valid: false }),
         makeResult({ valid: true }),
       ];

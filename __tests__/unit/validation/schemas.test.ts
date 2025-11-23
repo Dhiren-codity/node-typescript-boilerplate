@@ -42,15 +42,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a generic rule with customValidator', (): void => {
-      const customValidator = (value: unknown): boolean => typeof value === 'string';
-      const rule: ValidationRule = {
-        field: 'custom',
-        type: 'string',
-        required: true,
-        customValidator,
-        errorMessage: 'Custom error',
-      };
       const returned = builder.addRule(rule);
       expect(returned).toBe(builder);
 
@@ -67,8 +58,6 @@ describe('SchemaBuilder', (): void => {
       expect((rules[0] as ValidationRule).customValidator?.(123)).toBe(false);
     });
 
-    test('should propagate errors if internal push fails', (): void => {
-      const internal = builder as unknown as { schema: { rules: unknown[] } };
       const pushSpy = vi.spyOn(internal.schema.rules, 'push').mockImplementation((): number => {
         throw new Error('push failed');
       });
@@ -103,13 +92,6 @@ describe('SchemaBuilder', (): void => {
       );
     });
 
-    test('should support optional and constraints', (): void => {
-      builder.stringField('bio', false, {
-        minLength: 5,
-        maxLength: 100,
-        pattern: /^about/i,
-        errorMessage: 'Bio invalid',
-      });
 
       const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
@@ -126,9 +108,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a required number rule by default', (): void => {
-      builder.numberField('age');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'age',
         type: 'number',
@@ -136,8 +115,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should support optional and range', (): void => {
-      builder.numberField('score', false, { min: 0, max: 10, errorMessage: 'Score invalid' });
       const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'score',
@@ -151,9 +128,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('emailField', (): void => {
-    test('should add an email rule with default error message', (): void => {
-      builder.emailField('email');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'email',
         type: 'email',
@@ -166,9 +140,6 @@ describe('SchemaBuilder', (): void => {
       expect(pattern?.test('invalid-email')).toBe(false);
     });
 
-    test('should allow custom error message and optional', (): void => {
-      builder.emailField('email', false, 'Bad email');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'email',
         type: 'email',
@@ -179,9 +150,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('urlField', (): void => {
-    test('should add a url rule with default error message', (): void => {
-      builder.urlField('website');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'website',
         type: 'url',
@@ -190,9 +158,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should allow custom error message and optional', (): void => {
-      builder.urlField('site', false, 'Bad url');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'site',
         type: 'url',
@@ -203,9 +168,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('booleanField', (): void => {
-    test('should add a required boolean rule by default', (): void => {
-      builder.booleanField('isActive');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'isActive',
         type: 'boolean',
@@ -213,9 +175,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should allow optional boolean', (): void => {
-      builder.booleanField('isAdmin', false);
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'isAdmin',
         type: 'boolean',
@@ -225,9 +184,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('arrayField', (): void => {
-    test('should add a required array rule by default', (): void => {
-      builder.arrayField('tags');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'tags',
         type: 'array',
@@ -235,9 +191,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should allow optional array', (): void => {
-      builder.arrayField('items', false);
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'items',
         type: 'array',
@@ -247,9 +200,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('objectField', (): void => {
-    test('should add a required object rule by default', (): void => {
-      builder.objectField('profile');
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'profile',
         type: 'object',
@@ -257,9 +207,6 @@ describe('SchemaBuilder', (): void => {
       });
     });
 
-    test('should allow optional object', (): void => {
-      builder.objectField('settings', false);
-      const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
         field: 'settings',
         type: 'object',

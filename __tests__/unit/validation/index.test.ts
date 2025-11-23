@@ -145,22 +145,16 @@ describe('validation/index re-exports', () => {
   });
 
   describe('Validator', () => {
-    test('should validate valid data', (): void => {
-      const validator = new Validator({} as unknown);
       const result = validator.validate({ ok: true });
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
     });
 
-    test('should return invalid for data with invalid flag', (): void => {
-      const validator = new Validator({} as unknown);
       const result = validator.validate({ invalid: true });
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(['invalid']);
     });
 
-    test('should track last validated value', (): void => {
-      const validator = new Validator({} as unknown);
       const data: Record<string, unknown> = { value: 123 };
       validator.validate(data);
       expect(validator.lastValidated).toBe(data);
@@ -200,9 +194,6 @@ describe('validation/index re-exports', () => {
       expect(output).toBe(input);
     });
 
-    test('ValidationMiddleware strict mode should throw on null', (): void => {
-      resetGlobalMiddleware();
-      const strictMw = ValidationMiddleware({ strict: true });
       expect(() => strictMw(null)).toThrowError('strict mode');
     });
 

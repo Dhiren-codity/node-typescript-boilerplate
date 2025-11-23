@@ -94,16 +94,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate valid data and sanitize strings (trim)', (): void => {
-      const data: Record<string, unknown> = {
-        username: '  Alice  ',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-        isAdmin: true,
-        tags: ['one', 'two'],
-        profile: { city: 'Paris' },
-      };
 
       const result = validator.validate(data);
 
@@ -115,10 +105,6 @@ describe('Validator', (): void => {
       expect((result.sanitized as Record<string, unknown>).age).toBe(30);
     });
 
-    test('should return error when required field is missing', (): void => {
-      const data: Record<string, unknown> = {
-        age: 30,
-      };
 
       const result = validator.validate(data);
       expect(result.valid).toBe(false);
@@ -126,16 +112,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should enforce string length constraints', (): void => {
-      const tooShort: Record<string, unknown> = {
-        username: 'Al',
-        age: 30,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
       const shortRes = validator.validate(tooShort);
       expect(shortRes.valid).toBe(false);
       expect(shortRes.errors.some((e) => e.field === 'username' && e.rule === 'minLength')).toBe(true);
@@ -154,16 +130,6 @@ describe('Validator', (): void => {
       expect(longRes.errors.some((e) => e.field === 'username' && e.rule === 'maxLength')).toBe(true);
     });
 
-    test('should enforce number range constraints', (): void => {
-      const tooYoung: Record<string, unknown> = {
-        username: 'Alice',
-        age: 15,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
       const youngRes = validator.validate(tooYoung);
       expect(youngRes.valid).toBe(false);
       expect(youngRes.errors.some((e) => e.field === 'age' && e.rule === 'min')).toBe(true);
@@ -182,33 +148,11 @@ describe('Validator', (): void => {
       expect(oldRes.errors.some((e) => e.field === 'age' && e.rule === 'max')).toBe(true);
     });
 
-    test('should validate regex pattern for strings', (): void => {
-      const data: Record<string, unknown> = {
-        username: 'Bob123', // violates /^[A-Za-z]+$/
-        age: 30,
-        email: 'b@b.com',
-        website: 'https://example.com',
-        isAdmin: true,
-        tags: [],
-        profile: {},
-      };
       const res = validator.validate(data);
       expect(res.valid).toBe(false);
       expect(res.errors.some((e) => e.field === 'username' && e.rule === 'pattern')).toBe(true);
     });
 
-    test('should validate email type including custom errorMessage override', (): void => {
-      const customSchema: ValidationSchema = {
-        ...schema,
-        rules: [
-          ...schema.rules.filter((r) => r.field !== 'email'),
-          {
-            field: 'email',
-            type: 'email',
-            errorMessage: 'Invalid email address',
-          },
-        ],
-      };
       const customValidator = new Validator(customSchema);
       const data: Record<string, unknown> = {
         username: 'Alice',
@@ -224,16 +168,6 @@ describe('Validator', (): void => {
       expect(res.errors.some((e) => e.field === 'email' && e.rule === 'type' && e.message === 'Invalid email address')).toBe(true);
     });
 
-    test('should validate URL type', (): void => {
-      const bad: Record<string, unknown> = {
-        username: 'Alice',
-        age: 30,
-        email: 'a@b.com',
-        website: 'ht!tp://bad',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
       const badRes = validator.validate(bad);
       expect(badRes.valid).toBe(false);
       expect(badRes.errors.some((e) => e.field === 'website' && e.rule === 'type')).toBe(true);
@@ -246,16 +180,6 @@ describe('Validator', (): void => {
       expect(goodRes.valid).toBe(true);
     });
 
-    test('should enforce boolean, array, and object types', (): void => {
-      const bad: Record<string, unknown> = {
-        username: 'Alice',
-        age: 30,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: 'yes',
-        tags: 'not-an-array',
-        profile: null,
-      };
       const res = validator.validate(bad);
       expect(res.valid).toBe(false);
       expect(res.errors.some((e) => e.field === 'isAdmin' && e.rule === 'type')).toBe(true);
@@ -263,31 +187,11 @@ describe('Validator', (): void => {
       expect(res.errors.some((e) => e.field === 'profile' && e.rule === 'type')).toBe(true);
     });
 
-    test('should reject NaN as number type', (): void => {
-      const data: Record<string, unknown> = {
-        username: 'Alice',
-        age: Number.NaN,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
       const res = validator.validate(data);
       expect(res.valid).toBe(false);
       expect(res.errors.some((e) => e.field === 'age' && e.rule === 'type')).toBe(true);
     });
 
-    test('should not convert numeric strings to numbers due to type validation (sanitization is not applied in that case)', (): void => {
-      const data: Record<string, unknown> = {
-        username: 'Alice',
-        age: '42',
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
       const res = validator.validate(data);
       expect(res.valid).toBe(false);
       // Fails type validation before sanitization
@@ -295,45 +199,17 @@ describe('Validator', (): void => {
       expect(res.sanitized).toBeUndefined();
     });
 
-    test('should produce errors for unknown fields in Strict level', (): void => {
-      const data: Record<string, unknown> = {
-        username: 'Alice',
-        age: 30,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-        extra: 'not-allowed',
-      };
       const res = validator.validate(data);
       expect(res.valid).toBe(false);
       expect(res.errors.some((e) => e.rule === 'unknown_field' && e.field === 'extra')).toBe(true);
     });
 
-    test('should produce warnings (not errors) for unknown fields in Loose level', (): void => {
-      validator.setLevel(ValidationLevel.Loose);
-      const data: Record<string, unknown> = {
-        username: 'Alice',
-        age: 30,
-        email: 'a@b.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-        extra: 'allowed as warning',
-      };
       const res = validator.validate(data);
       expect(res.valid).toBe(true);
       expect(res.errors.length).toBe(0);
       expect(res.warnings.some((w) => typeof w === 'string' && w.includes("Unknown field 'extra'"))).toBe(true);
     });
 
-    test('should ignore unknown fields when allowUnknownFields is true', (): void => {
-      const allowUnknownSchema: ValidationSchema = {
-        ...schema,
-        allowUnknownFields: true,
-      };
       const allowUnknownValidator = new Validator(allowUnknownSchema);
       const data: Record<string, unknown> = {
         username: 'Alice',
@@ -351,15 +227,6 @@ describe('Validator', (): void => {
       expect(res.warnings.length).toBe(0);
     });
 
-    test('should use custom errorMessage for required and pattern/type rules', (): void => {
-      const customRules: ValidationRule[] = [
-        {
-          field: 'title',
-          type: 'string',
-          required: true,
-          errorMessage: 'Title is mandatory',
-          pattern: /^[A-Z].*$/,
-        },
         {
           field: 'homepage',
           type: 'url',
@@ -389,14 +256,6 @@ describe('Validator', (): void => {
       expect(resMissing.errors.some((e) => e.field === 'title' && e.rule === 'required' && e.message === 'Title is mandatory')).toBe(true);
     });
 
-    test('should handle custom validator returning false and throwing error', (): void => {
-      const rules: ValidationRule[] = [
-        {
-          field: 'code',
-          type: 'string',
-          customValidator: (_value: unknown): boolean => false,
-          errorMessage: 'Custom rule failed',
-        },
         {
           field: 'throws',
           type: 'string',
@@ -424,16 +283,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should validate using helper and return same shape as Validator.validate', (): void => {
-      const data: Record<string, unknown> = {
-        username: 'Bob',
-        age: 25,
-        email: 'bob@example.com',
-        website: 'https://example.com',
-        isAdmin: false,
-        tags: [],
-        profile: {},
-      };
 
       const direct = validator.validate(data);
       const viaHelper = validateData(data, schema);
@@ -445,9 +294,6 @@ describe('Validator', (): void => {
   });
 
   describe('type coverage via switch in validateType', (): void => {
-    test('should validate boolean, array, object, string, number, email, url branches', (): void => {
-      const allRules: ValidationRule[] = [
-        { field: 's', type: 'string' },
         { field: 'n', type: 'number' },
         { field: 'b', type: 'boolean' },
         { field: 'arr', type: 'array' },

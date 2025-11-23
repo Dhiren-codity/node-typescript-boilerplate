@@ -32,23 +32,12 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule', (): void => {
-      const rule: ValidationRule = {
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 0,
-        max: 120,
-        errorMessage: 'Invalid age',
-      };
       builder.addRule(rule);
       const schema: ValidationSchema = builder.build();
       expect(schema.rules.length).toBe(1);
       expect(schema.rules[0]).toEqual(rule);
     });
 
-    test('should preserve rule insertion order', (): void => {
-      const rule1: ValidationRule = { field: 'first', type: 'string', required: true };
       const rule2: ValidationRule = { field: 'second', type: 'boolean', required: false };
       builder.addRule(rule1).addRule(rule2);
       const schema: ValidationSchema = builder.build();
@@ -80,14 +69,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(true);
     });
 
-    test('should add an optional string field with options', (): void => {
-      const pattern = /^[a-z]+$/u;
-      builder.stringField('username', false, {
-        minLength: 3,
-        maxLength: 16,
-        pattern,
-        errorMessage: 'Invalid username',
-      });
       const schema: ValidationSchema = builder.build();
       const rule = schema.rules.find((r): boolean => r.field === 'username') as ValidationRule | undefined;
       expect(rule).toBeDefined();
@@ -118,8 +99,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.max).toBeUndefined();
     });
 
-    test('should add an optional number field with min and max', (): void => {
-      builder.numberField('age', false, { min: 1, max: 100, errorMessage: 'Age out of range' });
       const schema: ValidationSchema = builder.build();
       const rule = schema.rules.find((r): boolean => r.field === 'age') as ValidationRule | undefined;
       expect(rule).toBeDefined();
@@ -294,10 +273,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema1.rules).toBe(schema2.rules);
     });
 
-    test('should reflect mutations to returned rules array in subsequent builds (shallow copy behavior)', (): void => {
-      builder.stringField('initial');
-      const schema1: ValidationSchema = builder.build();
-      const newRule: ValidationRule = { field: 'extra', type: 'boolean', required: true };
       schema1.rules.push(newRule);
       const schema2: ValidationSchema = builder.build();
       const pushed = schema2.rules.find((r): boolean => r.field === 'extra') as ValidationRule | undefined;

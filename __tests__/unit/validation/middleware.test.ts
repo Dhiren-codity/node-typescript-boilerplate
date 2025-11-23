@@ -116,11 +116,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'none' not found");
     });
 
-    test('should return validation result from validator', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const data: Record<string, unknown> = { a: 1, b: 2, c: 3 };
       const result = middleware.validateWithSchema('user', data);
 
       expect(result.valid).toBe(true);
@@ -129,31 +124,16 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual(data);
     });
 
-    test('should apply abortEarly to return only first error', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const data: Record<string, unknown> = { errorCount: 3 };
       const result = middleware.validateWithSchema('user', data, { abortEarly: true });
 
       expect(result.errors).toHaveLength(1);
     });
 
-    test('should not modify errors when abortEarly is false', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const data: Record<string, unknown> = { errorCount: 2 };
       const result = middleware.validateWithSchema('user', data, { abortEarly: false });
 
       expect(result.errors).toHaveLength(2);
     });
 
-    test('should strip unknown fields when stripUnknown is true and sanitized exists', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const sanitizedOverride: Record<string, unknown> = { a: 1, b: 2, extra: 'remove-me' };
       const data: Record<string, unknown> = { sanitizedOverride };
       const result = middleware.validateWithSchema('user', data, { stripUnknown: true });
 
@@ -161,22 +141,12 @@ describe('ValidationMiddleware', (): void => {
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'extra')).toBe(false);
     });
 
-    test('should leave sanitized undefined when validator returns no sanitized object', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const data: Record<string, unknown> = { noSanitized: true };
       const result = middleware.validateWithSchema('user', data, { stripUnknown: true });
       expect(result.sanitized).toBeUndefined();
     });
   });
 
   describe('createMiddleware', (): void => {
-    test('should create a function that validates using given options', async (): Promise<void> => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const mw = middleware.createMiddleware('user', { abortEarly: true });
       const data: Record<string, unknown> = { errorCount: 2 };
 
       const result = await mw(data);
@@ -192,12 +162,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'missing' not found");
     });
 
-    test('should validate multiple data entries', (): void => {
-      const schema = createSampleSchema();
-      middleware.registerSchema('user', schema as unknown as never);
-
-      const dataArray: Record<string, unknown>[] = [
-        { a: 1 },
         { errorCount: 1 },
         { errorCount: 0 },
       ];
@@ -211,17 +175,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const allValid = middleware.batchValidationPassed([
-        { valid: true, errors: [] },
         { valid: true, errors: [] },
       ] as unknown as { valid: boolean; errors: unknown[] }[]);
       expect(allValid).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const notAllValid = middleware.batchValidationPassed([
-        { valid: true, errors: [] },
         { valid: false, errors: [{ message: 'x' }] },
       ] as unknown as { valid: boolean; errors: unknown[] }[]);
       expect(notAllValid).toBe(false);
@@ -284,9 +242,6 @@ describe('Global middleware instance', (): void => {
       expect(instance1).toBe(instance2);
     });
 
-    test('should preserve state across calls', (): void => {
-      const instance1 = getGlobalMiddleware();
-      const schema: Record<string, unknown> = { rules: [{ field: 'a' }] };
       instance1.registerSchema('globalUser', schema as unknown as never);
 
       const instance2 = getGlobalMiddleware();

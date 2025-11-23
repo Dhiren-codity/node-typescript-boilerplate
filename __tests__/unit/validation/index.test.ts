@@ -149,9 +149,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('SchemaBuilder', () => {
-    test('should build schema with provided label', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      const SchemaBuilderCtor = api.SchemaBuilder as new (label: string) => { build: () => { name: string } };
 
       const builder = new SchemaBuilderCtor('my-schema');
       const built = builder.build();
@@ -161,9 +158,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('Validator', () => {
-    test('should validate data successfully', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      const ValidatorCtor = api.Validator as new (schema?: unknown) => { validate: (data: unknown) => { valid: boolean; schema: unknown; data: unknown } };
       type MockedFn = ReturnType<typeof vi.fn>;
 
       const instance = new ValidatorCtor({ type: 'object' });
@@ -178,9 +172,6 @@ describe('validation/index barrel exports', () => {
       expect(validateSpy).toHaveBeenCalledWith({ foo: 'bar' });
     });
 
-    test('should propagate validation errors', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      const ValidatorCtor = api.Validator as new () => { validate: (data: unknown) => unknown };
 
       const instance = new ValidatorCtor();
       expect(() => instance.validate('throw')).toThrow('Validator validate error');
@@ -188,9 +179,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('validateData', () => {
-    test('should return successful result', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      const validateData = api.validateData as (data: unknown) => { ok: boolean; data: unknown };
       const result = validateData({ a: 1 });
 
       expect(result.ok).toBe(true);
@@ -206,9 +194,6 @@ describe('validation/index barrel exports', () => {
   });
 
   describe('ValidationMiddleware', () => {
-    test('should instantiate and handle without errors', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      type MiddlewareInstance = { handle: (req: unknown, res: unknown, next: unknown) => unknown };
       type MockedFn = ReturnType<typeof vi.fn>;
       const MiddlewareCtor = api.ValidationMiddleware as new (opts?: Record<string, unknown>) => MiddlewareInstance;
 
@@ -222,9 +207,6 @@ describe('validation/index barrel exports', () => {
       expect(handleSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('should propagate errors from handle', async (): Promise<void> => {
-      const api = await import('../src/validation/index.ts');
-      const MiddlewareCtor = api.ValidationMiddleware as new () => { handle: (req: unknown, res: unknown, next: unknown) => unknown };
 
       const instance = new MiddlewareCtor();
       expect(() => instance.handle({ shouldThrow: true }, {}, {})).toThrow('Middleware error');

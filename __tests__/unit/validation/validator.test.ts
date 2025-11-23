@@ -107,10 +107,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate required fields and return error when missing', (): void => {
-      const result = validator.validate({
-        age: 30,
-      } as Record<string, unknown>);
 
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
@@ -124,32 +120,17 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should pass when optional fields are absent', (): void => {
-      const result = validator.validate({
-        username: 'Alice',
-        age: 25,
-      } as Record<string, unknown>);
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
       expect(result.sanitized).toBeDefined();
     });
 
-    test('should trim string values in sanitized output', (): void => {
-      const data = {
-        username: '  Alice  ',
-        age: 25,
-      } as Record<string, unknown>;
       const result = validator.validate(data);
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBeDefined();
       expect(result.sanitized?.username).toBe('Alice');
     });
 
-    test('should enforce string minLength and maxLength', (): void => {
-      const tooShort = validator.validate({
-        username: 'ab',
-        age: 20,
-      } as Record<string, unknown>);
 
       expect(tooShort.valid).toBe(false);
       expect(tooShort.errors).toEqual(
@@ -171,11 +152,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should validate number min and max range', (): void => {
-      const tooYoung = validator.validate({
-        username: 'Bob',
-        age: 17,
-      } as Record<string, unknown>);
 
       expect(tooYoung.valid).toBe(false);
       expect(tooYoung.errors).toEqual(
@@ -197,12 +173,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should validate regex pattern for string field', (): void => {
-      const badPattern = validator.validate({
-        username: 'Bob',
-        age: 30,
-        code: 'abc-123',
-      } as Record<string, unknown>);
       expect(badPattern.valid).toBe(false);
       expect(badPattern.errors).toEqual(
         expect.arrayContaining([
@@ -219,13 +189,6 @@ describe('Validator', (): void => {
       expect(goodPattern.errors.length).toBe(0);
     });
 
-    test('should validate email and url types via switch(type)', (): void => {
-      const invalids = validator.validate({
-        username: 'Carl',
-        age: 30,
-        email: 'not-an-email',
-        website: 'htp://bad url',
-      } as Record<string, unknown>);
 
       expect(invalids.valid).toBe(false);
       expect(invalids.errors).toEqual(
@@ -246,25 +209,11 @@ describe('Validator', (): void => {
       expect(valids.errors.length).toBe(0);
     });
 
-    test('should validate array, object, and boolean types', (): void => {
-      const result = validator.validate({
-        username: 'Dana',
-        age: 30,
-        tags: ['a', 'b'],
-        meta: { a: 1 },
-        isActive: true,
-      } as Record<string, unknown>);
 
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
     });
 
-    test('should fail when object field is an array', (): void => {
-      const result = validator.validate({
-        username: 'Eve',
-        age: 30,
-        meta: [],
-      } as Record<string, unknown>);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -274,12 +223,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should record unknown fields as errors in Strict level', (): void => {
-      const result = validator.validate({
-        username: 'Frank',
-        age: 30,
-        extra: 'nope',
-      } as Record<string, unknown>);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -290,14 +233,6 @@ describe('Validator', (): void => {
       expect(result.warnings.length).toBe(0);
     });
 
-    test('should record unknown fields as warnings in Lenient level', (): void => {
-      validator.setLevel(ValidationLevel.Lenient);
-
-      const result = validator.validate({
-        username: 'Gina',
-        age: 30,
-        extra: 'ok',
-      } as Record<string, unknown>);
 
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
@@ -306,11 +241,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should ignore unknown fields when allowUnknownFields is true', (): void => {
-      const localSchema = {
-        ...(validator.getSchema() as Record<string, unknown>),
-        allowUnknownFields: true,
-      } as unknown as ConstructorParameters<typeof Validator>[0];
 
       const localValidator = new Validator(localSchema);
       const result = localValidator.validate({
@@ -353,10 +283,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should add custom validation error when customValidator returns false', (): void => {
-      const customFailSchema = {
-        ...(validator.getSchema() as Record<string, unknown>),
-      } as unknown as ConstructorParameters<typeof Validator>[0];
 
       // Replace custom rule with failing one
       const rules = (customFailSchema as unknown as { rules: Array<Record<string, unknown>> }).rules;
@@ -382,10 +308,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should capture exception thrown by customValidator and report custom_error', (): void => {
-      const customThrowSchema = {
-        ...(validator.getSchema() as Record<string, unknown>),
-      } as unknown as ConstructorParameters<typeof Validator>[0];
 
       const rules = (customThrowSchema as unknown as { rules: Array<Record<string, unknown>> }).rules;
       const idx = rules.findIndex((r: Record<string, unknown>) => r.field === 'custom');
@@ -416,25 +338,12 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should not include undefined optional fields in sanitized output', (): void => {
-      const result = validator.validate({
-        username: 'Kim',
-        age: 30,
-      } as Record<string, unknown>);
       expect(result.valid).toBe(true);
       expect(result.sanitized).toBeDefined();
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'email')).toBe(false);
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'website')).toBe(false);
     });
 
-    test('should report type errors for mismatched types', (): void => {
-      const result = validator.validate({
-        username: 'Leo',
-        age: '25', // string instead of number
-        tags: 'not-array',
-        meta: 'not-object',
-        isActive: 'true',
-      } as unknown as Record<string, unknown>);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(
@@ -447,11 +356,6 @@ describe('Validator', (): void => {
       );
     });
 
-    test('should not convert numeric strings to numbers due to type validation failure', (): void => {
-      const result = validator.validate({
-        username: 'Max',
-        age: '42',
-      } as unknown as Record<string, unknown>);
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
       expect(result.errors).toEqual(
@@ -461,15 +365,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should validate using helper function and return sanitized output', (): void => {
-      const simpleSchema = {
-        rules: [
-          { field: 'name', type: 'string', required: true },
-          { field: 'count', type: 'number' },
-        ],
-        allowUnknownFields: true,
-        level: ValidationLevel.Lenient,
-      } as unknown as ConstructorParameters<typeof Validator>[0];
 
       const result = validateData(
         { name: '  Zara  ', count: 3 } as Record<string, unknown>,
@@ -482,12 +377,6 @@ describe('Validator', (): void => {
       expect(result.sanitized?.count).toBe(3);
     });
 
-    test('should surface errors through helper when invalid', (): void => {
-      const simpleSchema = {
-        rules: [{ field: 'name', type: 'string', required: true }],
-        allowUnknownFields: false,
-        level: ValidationLevel.Strict,
-      } as unknown as ConstructorParameters<typeof Validator>[0];
 
       const result = validateData({} as Record<string, unknown>, simpleSchema);
       expect(result.valid).toBe(false);

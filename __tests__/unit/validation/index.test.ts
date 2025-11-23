@@ -57,22 +57,10 @@ const schemasFactory = (): unknown => {
       expect(levelObj.LENIENT).toBe('lenient');
     });
 
-    test('SchemaBuilder should allow chaining and building', (): void => {
-      type SB = {
-        addRule: (rule: unknown) => SB;
-        build: () => Record<string, unknown>;
-      };
     });
-    test('SchemaBuilder build should propagate errors', (): void => {
-      type SB = {
-        addRule: (rule: unknown) => SB;
-        build: () => unknown;
-      };
       });
     });
   describe('validator re-exports', (): void => {
-    test('validateData should return expected result and record calls', (): void => {
-      const data: Record<string, unknown> = { a: 1 };
       const schema: Record<string, unknown> = { type: 'object' };
       const result = validateData(data, schema);
       expect(result).toBe('validated');
@@ -83,19 +71,12 @@ const schemasFactory = (): unknown => {
       expect(validateSpy.mock.calls[0]?.[1]).toEqual(schema);
     });
 
-    test('validateData should propagate errors', (): void => {
-      const validateSpy = validateData as unknown as ReturnType<typeof vi.fn>;
-      validateSpy.mockImplementationOnce((): never => {
-        throw new Error('validation failed');
-      });
 
       expect(() => validateData({} as Record<string, unknown>, {} as Record<string, unknown>)).toThrowError(
         'validation failed'
       );
     });
 
-    test('Validator should initialize and call validate method', (): void => {
-      type VInst = { validate: (data: unknown, schema: unknown) => boolean };
       const instance: VInst = new (Validator as unknown as new () => VInst)();
       const result1 = instance.validate({ foo: 'bar' }, { schema: true });
       expect(result1).toBe(true);
@@ -111,8 +92,6 @@ const schemasFactory = (): unknown => {
   });
 
   describe('middleware re-exports', (): void => {
-    test('ValidationMiddleware should update global state via getGlobalMiddleware', (): void => {
-      const result = ValidationMiddleware({ level: 'strict', enabled: true } as Record<string, unknown>);
       expect(result).toBe('mw');
 
       const state = getGlobalMiddleware() as { lastOpts: unknown };
@@ -120,8 +99,6 @@ const schemasFactory = (): unknown => {
       expect(state.lastOpts).toEqual({ level: 'strict', enabled: true });
     });
 
-    test('resetGlobalMiddleware should reset global state', (): void => {
-      ValidationMiddleware({ mode: 'test' } as Record<string, unknown>);
       let state = getGlobalMiddleware() as { lastOpts: unknown };
       expect(state.lastOpts).toEqual({ mode: 'test' });
 

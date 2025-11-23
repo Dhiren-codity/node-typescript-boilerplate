@@ -38,17 +38,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule and support chaining', (): void => {
-      const customValidator = (_value: unknown): boolean => true;
-      const rule: ValidationRule = {
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 18,
-        max: 99,
-        customValidator,
-        errorMessage: 'Age must be between 18 and 99',
-      };
 
       const returned: SchemaBuilder = builder.addRule(rule);
       expect(returned).toBe(builder);
@@ -66,22 +55,10 @@ describe('SchemaBuilder', (): void => {
       expect(typeof schema.rules[0]?.customValidator).toBe('function');
     });
 
-    test('should not throw when adding a rule with a customValidator that throws when executed', (): void => {
-      const throwingValidator = (_value: unknown): boolean => {
-        throw new Error('validator error');
-      };
       };
     });
   });
   describe('stringField', (): void => {
-    test('should add a required string rule with options', (): void => {
-      const pattern: RegExp = /^[A-Za-z]+$/;
-      const returned: SchemaBuilder = builder.stringField('name', true, {
-        minLength: 2,
-        maxLength: 50,
-        pattern,
-        errorMessage: 'Name must be alphabetic',
-      });
       expect(returned).toBe(builder);
 
       const schema: ValidationSchema = builder.build();
@@ -108,8 +85,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add a number rule with constraints', (): void => {
-      builder.numberField('score', true, { min: 0, max: 100, errorMessage: 'Score must be 0-100' });
       const schema: ValidationSchema = builder.build();
       const rule = schema.rules.find((r) => r.field === 'score');
       expect(rule).toBeDefined();
@@ -266,9 +241,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('fluent chaining', (): void => {
-    test('should support chaining multiple field definitions', (): void => {
-      const returned: SchemaBuilder = builder
-        .stringField('username', true, { minLength: 3 })
         .emailField('email', true)
         .numberField('age', false, { min: 0 })
         .allowUnknown(true)

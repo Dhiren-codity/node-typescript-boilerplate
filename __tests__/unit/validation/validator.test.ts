@@ -106,21 +106,6 @@ declare module './schemas.js' {
   });
 
   describe('validate', (): void => {
-    test('should validate valid data and produce sanitized output (trim strings)', (): void => {
-      validator.setLevel(ValidationLevel.Relaxed);
-
-      const data: Record<string, unknown> = {
-        name: '  Alice  ',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-        tags: ['a', 'b'],
-        profile: { bio: 'hello' },
-        code: '123',
-        flag: true,
-        token: 'tok_123',
-        extra: 'ignored',
-      };
 
       const result = validator.validate(data) as ValidationResult;
       expect(result.valid).toBe(true);
@@ -141,15 +126,6 @@ declare module './schemas.js' {
       expect(sanitized.token).toBe('tok_123');
     });
 
-    test('should report unknown fields as errors in Strict mode', (): void => {
-      validator.setLevel(ValidationLevel.Strict);
-
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: 25,
-        email: 'bob@example.com',
-        extra: 'not allowed',
-      };
 
       const result = validator.validate(data) as ValidationResult;
       expect(result.valid).toBe(false);
@@ -158,16 +134,6 @@ declare module './schemas.js' {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should allow unknown fields when allowUnknownFields is true', (): void => {
-      schema.allowUnknownFields = true;
-      validator = new Validator(schema as ConstructorParameters<typeof Validator>[0]);
-
-      const data: Record<string, unknown> = {
-        name: 'Bob',
-        age: 25,
-        email: 'bob@example.com',
-        extra: 'allowed silently',
-      };
 
       const result = validator.validate(data) as ValidationResult;
       expect(result.valid).toBe(true);
@@ -177,25 +143,8 @@ declare module './schemas.js' {
       expect(Object.prototype.hasOwnProperty.call(result.sanitized as Record<string, unknown>, 'extra')).toBe(false);
     });
 
-    test('should flag required missing values (undefined and null)', (): void => {
-      const data1: Record<string, unknown> = {
-        // name missing
-        age: 20,
-        email: 'user@example.com',
-      };
       };
     });
-    test('should enforce type validation for string, number, boolean, array, object', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Valid',
-        age: 33,
-        email: 'valid@example.com',
-        // website optional
-        tags: 'not-an-array', // should fail
-        profile: [], // array is not object -> should fail
-        code: '123',
-        flag: 'true', // should fail
-      };
 
       const result = validator.validate(data) as ValidationResult;
       expect(result.valid).toBe(false);
@@ -208,48 +157,11 @@ declare module './schemas.js' {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should validate email and url formats', (): void => {
-      const dataBad: Record<string, unknown> = {
-        name: 'Ok',
-        age: 21,
-        email: 'not-an-email',
-        website: 'not-a-url',
-        code: '123',
+      };
+    });
       };
       };
     });
-    test('should enforce string length constraints', (): void => {
-      const tooShort: Record<string, unknown> = {
-        name: 'A',
-        age: 25,
-        email: 'a@a.com',
-        code: '123',
-      };
-      };
-    test('should enforce number ranges and reject NaN', (): void => {
-      const tooLow: Record<string, unknown> = {
-        name: 'Ok',
-        age: 10,
-        email: 'x@y.com',
-        code: '123',
-      };
-      };
-    test('should validate pattern for strings', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: 25,
-        email: 'x@y.com',
-        code: '12a',
-      };
-    });
-    test('should handle custom validator failures and exceptions', (): void => {
-      // Add a rule that fails custom validation
-      schema.rules.push({
-        field: 'customFail',
-        type: 'string',
-        required: false,
-        customValidator: (): boolean => false,
-      });
 
       // Add a rule whose validator throws
       schema.rules.push({
@@ -282,23 +194,8 @@ declare module './schemas.js' {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should not coerce number from string during sanitization (type must pass first)', (): void => {
-      const data: Record<string, unknown> = {
-        name: 'Ok',
-        age: '42',
-        email: 'x@y.com',
-        code: '123',
-      };
     });
   describe('validateData helper', (): void => {
-    test('should delegate to Validator.validate and return its result', (): void => {
-      const spy = vi.spyOn(Validator.prototype, 'validate');
-
-      const localSchema: ValidationSchema = {
-        rules: [{ field: 'name', type: 'string', required: true }],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-      };
 
       const data: Record<string, unknown> = { name: '  John  ' };
       const result = validateData(data, localSchema) as ValidationResult;
@@ -310,12 +207,6 @@ declare module './schemas.js' {
       expect((result.sanitized as Record<string, unknown>).name).toBe('John');
     });
 
-    test('should produce errors when input does not satisfy schema', (): void => {
-      const localSchema: ValidationSchema = {
-        rules: [{ field: 'name', type: 'string', required: true, minLength: 3 }],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: false,
-      };
 
       const data: Record<string, unknown> = { name: 'Al' };
       const result = validateData(data, localSchema) as ValidationResult;

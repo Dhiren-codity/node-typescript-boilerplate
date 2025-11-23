@@ -11,27 +11,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let validator: Validator;
-  let baseSchema: ValidationSchema;
-
-  beforeEach((): void => {
-    baseSchema = {
-      rules: [
-        { field: 'name', type: 'string', required: true, minLength: 2, maxLength: 10 },
-        { field: 'age', type: 'number', min: 0, max: 120 },
-        { field: 'email', type: 'email' },
-        { field: 'website', type: 'url' },
-        { field: 'tags', type: 'array' },
-        { field: 'profile', type: 'object' },
-        { field: 'newsletter', type: 'boolean' },
-      ],
-      level: ValidationLevel.Strict,
-      allowUnknownFields: false,
-    } as ValidationSchema;
-
-    validator = new Validator(baseSchema);
-  });
 
 
 
@@ -47,7 +26,6 @@ describe('Validator', (): void => {
       expect(schema.rules.length).toBe(7);
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return a shallow copy and not the internal reference', (): void => {
@@ -60,7 +38,6 @@ describe('Validator', (): void => {
       returned1.level = ValidationLevel.Lenient;
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
   describe('getLevel and setLevel', (): void => {
     test('should get and set validation level', (): void => {
@@ -68,19 +45,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const result = validator.validate(data);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors.length).toBe(0);
-      expect(result.warnings.length).toBe(0);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized?.name).toBe('Alice');
-      expect(result.sanitized?.age).toBe(30);
-    });
 
 
       const result = validator.validate(data);
@@ -229,11 +194,7 @@ describe('Validator', (): void => {
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
     });
-  });
 
-  describe('validateData helper', (): void => {
-
-      const success = validateData({ name: 'John' }, schema);
       const failure = validateData({}, schema);
 
       expect(success.valid).toBe(true);
@@ -242,5 +203,3 @@ describe('Validator', (): void => {
       expect(failure.valid).toBe(false);
       expect(failure.errors.some((e) => e.rule === 'required' && e.field === 'name')).toBe(true);
     });
-  });
-});

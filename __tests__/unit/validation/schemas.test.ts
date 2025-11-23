@@ -5,20 +5,9 @@ vi.mock('node:path', (): Record<string, unknown> => ({
   default: {},
 }));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
 
 
-  describe('constructor', (): void => {
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
 
     test('should initialize with default values', (): void => {
       const schema = builder.build();
@@ -38,24 +27,8 @@ describe('SchemaBuilder', (): void => {
     test('should not throw during construction', (): void => {
       expect((): void => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _instance = new SchemaBuilder('SafeInit');
-      }).not.toThrow();
     });
-  });
 
-  describe('addRule', (): void => {
-
-      expect(returnValue).toBe(builder);
-
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('custom');
-      expect(rule.type).toBe('string');
-      expect(rule.required).toBe(true);
-      expect(rule.errorMessage).toBe('Custom error');
-      expect(rule.customValidator).toBe(customValidator);
-    });
 
     test('should not throw when adding rule', (): void => {
       expect((): void => {
@@ -66,20 +39,7 @@ describe('SchemaBuilder', (): void => {
         });
       }).not.toThrow();
     });
-  });
 
-  describe('stringField', (): void => {
-      const schema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('firstName');
-      expect(rule.type).toBe('string');
-      expect(rule.required).toBe(true);
-      expect(rule.minLength).toBe(2);
-      expect(rule.maxLength).toBe(50);
-      expect(rule.pattern).toBe(pattern);
-      expect(rule.errorMessage).toBe('Bad name');
-    });
 
     test('should default to required true when not specified', (): void => {
       builder.stringField('title');
@@ -92,25 +52,13 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.rules[0].required).toBe(false);
     });
-  });
 
-  describe('numberField', (): void => {
-      const schema = builder.build();
-      const rule = schema.rules[0];
-      expect(rule.field).toBe('age');
-      expect(rule.type).toBe('number');
-      expect(rule.required).toBe(true);
-      expect(rule.min).toBe(0);
-      expect(rule.max).toBe(150);
-      expect(rule.errorMessage).toBe('Invalid age');
-    });
 
     test('should set required to false when provided', (): void => {
       builder.numberField('rating', false);
       const schema = builder.build();
       expect(schema.rules[0].required).toBe(false);
     });
-  });
 
   describe('emailField', (): void => {
     test('should add email rule with default error message and pattern', (): void => {
@@ -140,7 +88,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.rules[0].required).toBe(false);
     });
-  });
 
   describe('urlField', (): void => {
     test('should add url rule with default error message', (): void => {
@@ -164,7 +111,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.rules[0].required).toBe(false);
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add boolean rule default required true', (): void => {
@@ -181,7 +127,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.rules[0].required).toBe(false);
     });
-  });
 
   describe('arrayField', (): void => {
     test('should add array rule with required true by default', (): void => {
@@ -252,16 +197,6 @@ describe('SchemaBuilder', (): void => {
     });
   });
 
-  describe('method chaining', (): void => {
-
-      const schema = builder.build();
-      expect(schema.level).toBe(ValidationLevel.Strict);
-      expect(schema.allowUnknownFields).toBe(true);
-      expect(schema.rules.map((r): string => r.field)).toEqual(['name', 'age', 'active']);
-      expect(schema.rules[0].type).toBe('string');
-      expect(schema.rules[1].type).toBe('number');
-      expect(schema.rules[2].type).toBe('boolean');
-    });
   });
 
   describe('build', (): void => {

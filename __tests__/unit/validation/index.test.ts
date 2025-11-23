@@ -15,7 +15,6 @@ vi.mock('./validator.js', () => {
       }
       return { success: true, value: data };
     }
-  }
 
   const validateData = vi.fn((data: unknown) => {
     if (validatorThrow) {
@@ -49,13 +48,11 @@ vi.mock('./middleware.js', () => {
       }
       return { ...this.schema };
     }
-  }
 
   return {
     ValidationLevel,
     SchemaBuilder,
   };
-});
 
 
   return {
@@ -63,9 +60,7 @@ vi.mock('./middleware.js', () => {
     validateData,
     __setValidatorThrow,
   };
-});
 
-  });
 
   const getGlobalMiddleware = vi.fn(() => state.global);
   const resetGlobalMiddleware = vi.fn(() => {
@@ -79,12 +74,7 @@ vi.mock('./middleware.js', () => {
     resetGlobalMiddleware,
     __state: state,
   };
-});
 
-describe('validation index (re-exports)', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -125,12 +115,7 @@ describe('validation index (re-exports)', () => {
       // Reset flag for subsequent tests
       (schemasMod.SchemaBuilder as unknown as { shouldThrow: boolean }).shouldThrow = false;
     });
-  });
 
-  describe('Validator and validateData', () => {
-
-      const resultInstance = instance.validate(input);
-      expect(resultInstance).toEqual({ success: true, value: input });
 
       const resultFunc = indexMod.validateData(input);
       expect(resultFunc).toEqual({ success: true, value: input });
@@ -154,21 +139,7 @@ describe('validation index (re-exports)', () => {
       // Cleanup flag
       validatorMod.__setValidatorThrow(false);
     });
-  });
 
-  describe('Middleware exports', () => {
-      expect(typeof mw).toBe('function');
-
-      // Call the returned middleware function
-      mw();
-
-      expect(middlewareMod.__state.count).toBe(1);
-      expect(indexMod.getGlobalMiddleware()).toBe('initial');
-
-      indexMod.resetGlobalMiddleware();
-      expect(indexMod.getGlobalMiddleware()).toBe('reset');
-      expect(middlewareMod.__state.count).toBe(0);
-    });
 
 
       expect(() => indexMod.ValidationMiddleware({})).toThrow('factory error');

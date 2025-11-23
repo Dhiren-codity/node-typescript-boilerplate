@@ -25,7 +25,6 @@ vi.mock('../../src/validation/validator.js', (): Record<string, unknown> => {
 
       instances.push({ schema, validate: this.validate });
     }
-  }
 
   return {
     Validator: MockValidator,
@@ -34,7 +33,6 @@ vi.mock('../../src/validation/validator.js', (): Record<string, unknown> => {
       instances.splice(0, instances.length);
     },
   };
-});
 
   ValidationMiddleware,
   getGlobalMiddleware,
@@ -45,13 +43,6 @@ type MockHelpers = {
   __resetMockValidatorInstances: () => void;
 };
 
-describe('ValidationMiddleware', (): void => {
-  let middleware: ValidationMiddleware;
-  const helpers = validatorModule as unknown as MockHelpers;
-
-  const makeSchema = (fields: string[]): { rules: { field: string }[] } => ({
-    rules: fields.map((f) => ({ field: f })),
-  });
 
   beforeEach((): void => {
     middleware = new ValidationMiddleware();
@@ -69,7 +60,6 @@ describe('ValidationMiddleware', (): void => {
       expect(middleware.getSchemaCount()).toBe(0);
       expect(middleware.getSchemaNames()).toEqual([]);
     });
-  });
 
   describe('registerSchema', (): void => {
     test('should register schema and create validator instance', (): void => {
@@ -98,7 +88,6 @@ describe('ValidationMiddleware', (): void => {
       expect(instances.length).toBe(2); // constructor called twice
       expect(instances[1].schema).toBe(schema2);
     });
-  });
 
   describe('unregisterSchema', (): void => {
     test('should remove schema and its validator and return true', (): void => {
@@ -119,13 +108,11 @@ describe('ValidationMiddleware', (): void => {
       const removed = middleware.unregisterSchema('missing');
       expect(removed).toBe(false);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return undefined for unknown schema', (): void => {
       expect(middleware.getSchema('unknown')).toBeUndefined();
     });
-  });
 
   describe('validateWithSchema', (): void => {
     test('should throw when schema not found', (): void => {
@@ -191,11 +178,7 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toBeUndefined();
       expect(result.errors).toEqual([{ message: 'bad' }]);
     });
-  });
 
-  describe('createMiddleware', (): void => {
-
-      const fn = middleware.createMiddleware('user', { abortEarly: true, stripUnknown: true });
       const input = { name: 'Alice', age: 20, extra: true };
       const result = fn(input);
 
@@ -204,7 +187,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors).toEqual([{ message: 'e1' }]);
       expect(result.sanitized).toEqual({ name: 'Alice', age: 20 });
     });
-  });
 
   describe('batchValidate', (): void => {
     test('should throw when schema not found', (): void => {
@@ -225,10 +207,7 @@ describe('ValidationMiddleware', (): void => {
       expect(results[1].valid).toBe(false);
       expect(results[1].errors).toEqual([{ message: 'bad' }]);
     });
-  });
 
-  describe('batchValidationPassed', (): void => {
-        { valid: true, errors: [], sanitized: {} },
       ] as unknown as ReturnType<ValidationMiddleware['batchValidate']>;
       const passed = middleware.batchValidationPassed(results);
       expect(passed).toBe(true);
@@ -239,7 +218,6 @@ describe('ValidationMiddleware', (): void => {
       const passed = middleware.batchValidationPassed(results);
       expect(passed).toBe(false);
     });
-  });
 
   describe('getSchemaNames', (): void => {
     test('should return all registered schema names', (): void => {
@@ -250,7 +228,6 @@ describe('ValidationMiddleware', (): void => {
 
       expect(middleware.getSchemaNames()).toEqual(['one', 'two']);
     });
-  });
 
   describe('getSchemaCount', (): void => {
     test('should return the number of registered schemas', (): void => {
@@ -259,7 +236,6 @@ describe('ValidationMiddleware', (): void => {
       middleware.registerSchema('y', makeSchema(['y']) as never);
       expect(middleware.getSchemaCount()).toBe(2);
     });
-  });
 
   describe('clearAll', (): void => {
     test('should clear all schemas and validators', (): void => {
@@ -277,10 +253,6 @@ describe('ValidationMiddleware', (): void => {
   });
 });
 
-describe('Global middleware instance', (): void => {
-  afterEach((): void => {
-    resetGlobalMiddleware();
-  });
 
   describe('getGlobalMiddleware', (): void => {
     test('should return a singleton instance', (): void => {

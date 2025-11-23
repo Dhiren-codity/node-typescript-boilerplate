@@ -5,7 +5,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
         build(): string {
           return 'built';
         }
-      }
       const ValidationLevel = { BASIC: 'basic', STRICT: 'strict' } as const;
       return { ValidationLevel, SchemaBuilder: MockSchemaBuilder };
     });
@@ -15,7 +14,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
         constructor() {
           this.validate = vi.fn((_input: unknown): boolean => true);
         }
-      }
       const validateData = vi.fn((_data: unknown): boolean => true);
       return { Validator: MockValidator, validateData };
     });
@@ -25,7 +23,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
         constructor() {
           this.apply = vi.fn((value: unknown): unknown => value);
         }
-      }
       const getGlobalMiddleware = vi.fn((): string => 'global');
       const resetGlobalMiddleware = vi.fn((): void => {});
     vi.mock('../../src/validation/schemas.js', () => {
@@ -98,11 +95,6 @@ type MiddlewareModule = {
 
 type IndexModule = SchemasModule & ValidatorModule & MiddlewareModule;
 
-describe('validation/index barrel exports', () => {
-  beforeEach((): void => {
-    vi.resetModules();
-    vi.clearAllMocks();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();

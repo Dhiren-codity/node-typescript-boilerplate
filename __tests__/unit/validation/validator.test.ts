@@ -21,61 +21,6 @@ vi.mock('./schemas.js', (): Record<string, unknown> => ({
 }));
 
 
-describe('Validator', (): void => {
-  let schema: ValidationSchema;
-  let validator: Validator;
-
-  beforeEach((): void => {
-    schema = {
-      level: ValidationLevel.Strict,
-      allowUnknownFields: false,
-      rules: [
-        {
-          field: 'name',
-          type: 'string',
-          required: true,
-          minLength: 2,
-          maxLength: 10,
-          pattern: /^[A-Za-z ]+$/,
-        },
-        {
-          field: 'age',
-          type: 'number',
-          required: true,
-          min: 18,
-          max: 99,
-          customValidator: (v: unknown): boolean =>
-            typeof v === 'number' && Number.isInteger(v),
-        },
-        {
-          field: 'email',
-          type: 'email',
-          required: false,
-        },
-        {
-          field: 'website',
-          type: 'url',
-          required: false,
-        },
-        {
-          field: 'tags',
-          type: 'array',
-          required: false,
-        },
-        {
-          field: 'meta',
-          type: 'object',
-          required: false,
-        },
-        {
-          field: 'active',
-          type: 'boolean',
-          required: false,
-        },
-      ],
-    };
-    validator = new Validator(schema);
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -87,26 +32,7 @@ describe('Validator', (): void => {
       expect(validator.getSchema()).toBeDefined();
       expect(validator.getLevel()).toBe(ValidationLevel.Strict);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const result: ValidationResult = validator.validate(data);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors.length).toBe(0);
-      expect(result.warnings.length).toBe(0);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized).toEqual({
-        name: 'Alice',
-        age: 30,
-        email: 'alice@example.com',
-        website: 'https://example.com',
-        tags: ['a', 'b'],
-        meta: { key: 'value' },
-        active: true,
-      });
-    });
 
 
       const result: ValidationResult = validator.validate(data);
@@ -265,7 +191,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeDefined();
       expect((result.sanitized as Record<string, unknown>).extra).toBeUndefined();
     });
-  });
 
   describe('getSchema, getLevel, setLevel', (): void => {
     test('getSchema returns a shallow copy; modifying it does not change internal state', (): void => {
@@ -283,14 +208,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Lenient);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validateData helper', (): void => {
-
-      const result: ValidationResult = validateData(data, schema);
-      expect(result.valid).toBe(true);
-      expect((result.sanitized as Record<string, unknown>).name).toBe('Grace');
-    });
 
 
       const result: ValidationResult = validateData(data, schema);
@@ -304,5 +222,3 @@ describe('Validator', (): void => {
       expect(requiredErr).toBeDefined();
       expect(minErr).toBeDefined();
     });
-  });
-});

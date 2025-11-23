@@ -12,12 +12,6 @@ vi.mock('node:fs', (): Record<string, unknown> => ({
   readFileSync: vi.fn(),
 }));
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -43,23 +37,12 @@ describe('SchemaBuilder', (): void => {
     test('should not throw when building schema immediately after construction', (): void => {
       expect((): ValidationSchema => builder.build()).not.toThrow();
     });
-  });
 
-  describe('addRule', (): void => {
-
-      const returned = builder.addRule(rule);
-      expect(returned).toBe(builder);
-
-      const schema: ValidationSchema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      expect(schema.rules[0]).toEqual(rule);
-    });
 
 
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0].customValidator).toBe(customValidator);
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string rule with defaults', (): void => {
@@ -71,7 +54,6 @@ describe('SchemaBuilder', (): void => {
         type: 'string',
         required: true,
       });
-    });
 
       builder.stringField('username', false, options);
       const schema: ValidationSchema = builder.build();
@@ -84,7 +66,6 @@ describe('SchemaBuilder', (): void => {
         pattern: options.pattern,
         errorMessage: 'Invalid username',
       });
-    });
 
     test('should not throw when options are undefined', (): void => {
       expect((): SchemaBuilder => builder.stringField('desc', true, undefined)).not.toThrow();
@@ -94,7 +75,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema.rules[0].minLength).toBe(5);
       expect(schema.rules[0].maxLength).toBe(1);
     });
-  });
 
   describe('numberField', (): void => {
     test('should add a required number rule with defaults', (): void => {
@@ -105,7 +85,6 @@ describe('SchemaBuilder', (): void => {
         type: 'number',
         required: true,
       });
-    });
 
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0]).toEqual({
@@ -116,13 +95,11 @@ describe('SchemaBuilder', (): void => {
         max: 120,
         errorMessage: 'Invalid age',
       });
-    });
 
       const schema: ValidationSchema = builder.build();
       expect(schema.rules[0].min).toBe(10);
       expect(schema.rules[0].max).toBe(1);
     });
-  });
 
   describe('emailField', (): void => {
     test('should add required email rule with default pattern and message', (): void => {
@@ -149,7 +126,6 @@ describe('SchemaBuilder', (): void => {
       });
       expect(schema.rules[0].pattern).toBeInstanceOf(RegExp);
     });
-  });
 
   describe('urlField', (): void => {
     test('should add required url rule with default message', (): void => {

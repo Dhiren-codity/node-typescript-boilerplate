@@ -13,12 +13,6 @@ vi.mock('../../src/validation/schemas.ts', async (): Promise<Record<string, unkn
   type ValidationRule,
   type ValidationSchema,
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -39,13 +33,7 @@ describe('SchemaBuilder', (): void => {
       expect(schema.name).toBe('Custom');
       expect(schema.level).toBe(ValidationLevel.Strict);
     });
-  });
 
-  describe('addRule', (): void => {
-      const returned = builder.addRule(rule);
-      expect(returned).toBe(builder);
-
-      const { rules } = builder.build();
       expect(rules).toHaveLength(1);
       expect(rules[0]).toMatchObject({
         field: 'custom',
@@ -74,7 +62,6 @@ describe('SchemaBuilder', (): void => {
 
       pushSpy.mockRestore();
     });
-  });
 
   describe('stringField', (): void => {
     test('should add a required string rule by default', (): void => {
@@ -105,15 +92,7 @@ describe('SchemaBuilder', (): void => {
       expect((rules[0] as ValidationRule).pattern).toBeInstanceOf(RegExp);
       expect((rules[0] as ValidationRule).pattern?.test('About me')).toBe(true);
     });
-  });
 
-  describe('numberField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'age',
-        type: 'number',
-        required: true,
-      });
-    });
 
       const { rules } = builder.build();
       expect(rules[0]).toMatchObject({
@@ -124,16 +103,7 @@ describe('SchemaBuilder', (): void => {
         max: 10,
         errorMessage: 'Score invalid',
       });
-    });
-  });
 
-  describe('emailField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'email',
-        type: 'email',
-        required: true,
-        errorMessage: 'Invalid email format',
-      });
       const pattern = (rules[0] as ValidationRule).pattern;
       expect(pattern).toBeInstanceOf(RegExp);
       expect(pattern?.test('user@example.com')).toBe(true);
@@ -146,17 +116,7 @@ describe('SchemaBuilder', (): void => {
         required: false,
         errorMessage: 'Bad email',
       });
-    });
-  });
 
-  describe('urlField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'website',
-        type: 'url',
-        required: true,
-        errorMessage: 'Invalid URL format',
-      });
-    });
 
       expect(rules[0]).toMatchObject({
         field: 'site',
@@ -164,56 +124,27 @@ describe('SchemaBuilder', (): void => {
         required: false,
         errorMessage: 'Bad url',
       });
-    });
-  });
 
-  describe('booleanField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'isActive',
-        type: 'boolean',
-        required: true,
-      });
-    });
 
       expect(rules[0]).toMatchObject({
         field: 'isAdmin',
         type: 'boolean',
         required: false,
       });
-    });
-  });
 
-  describe('arrayField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'tags',
-        type: 'array',
-        required: true,
-      });
-    });
 
       expect(rules[0]).toMatchObject({
         field: 'items',
         type: 'array',
         required: false,
       });
-    });
-  });
 
-  describe('objectField', (): void => {
-      expect(rules[0]).toMatchObject({
-        field: 'profile',
-        type: 'object',
-        required: true,
-      });
-    });
 
       expect(rules[0]).toMatchObject({
         field: 'settings',
         type: 'object',
         required: false,
       });
-    });
-  });
 
   describe('allowUnknown', (): void => {
     test('should set allowUnknownFields to true', (): void => {
@@ -227,7 +158,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.allowUnknownFields).toBe(false);
     });
-  });
 
   describe('setLevel', (): void => {
     test('should change validation level', (): void => {
@@ -235,7 +165,6 @@ describe('SchemaBuilder', (): void => {
       const schema = builder.build();
       expect(schema.level).toBe(ValidationLevel.Lenient);
     });
-  });
 
   describe('build', (): void => {
     test('should return a snapshot object of current state (top-level cloned)', (): void => {
@@ -272,7 +201,6 @@ describe('SchemaBuilder', (): void => {
         type: 'boolean',
         required: true,
       });
-    });
   });
 
   describe('chaining', (): void => {

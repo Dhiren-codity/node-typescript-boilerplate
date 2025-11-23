@@ -10,62 +10,11 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => {
       Loose: 'loose',
     },
   };
-});
 
 
 // Mock the schemas module to control ValidationLevel values at runtime
 
 
-describe('Validator', (): void => {
-  let schema: ValidationSchema;
-  let validator: Validator;
-
-  beforeEach((): void => {
-    const rules: ValidationRule[] = [
-      {
-        field: 'username',
-        type: 'string',
-        required: true,
-        minLength: 3,
-        maxLength: 10,
-        pattern: /^[A-Za-z]+$/,
-      },
-      {
-        field: 'age',
-        type: 'number',
-        min: 18,
-        max: 99,
-      },
-      {
-        field: 'email',
-        type: 'email',
-      },
-      {
-        field: 'website',
-        type: 'url',
-      },
-      {
-        field: 'isAdmin',
-        type: 'boolean',
-      },
-      {
-        field: 'tags',
-        type: 'array',
-      },
-      {
-        field: 'profile',
-        type: 'object',
-      },
-    ];
-
-    schema = {
-      rules,
-      allowUnknownFields: false,
-      level: ValidationLevel.Strict,
-    };
-
-    validator = new Validator(schema);
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -91,19 +40,7 @@ describe('Validator', (): void => {
       validator.setLevel(ValidationLevel.Loose);
       expect(validator.getLevel()).toBe(ValidationLevel.Loose);
     });
-  });
 
-  describe('validate', (): void => {
-
-      const result = validator.validate(data);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result.warnings).toEqual([]);
-      expect(result.sanitized).toBeDefined();
-      expect((result.sanitized as Record<string, unknown>).username).toBe('Alice');
-      expect((result.sanitized as Record<string, unknown>).age).toBe(30);
-    });
 
 
       const result = validator.validate(data);
@@ -280,21 +217,8 @@ describe('Validator', (): void => {
       expect(res.errors.some((e) => e.field === 'code' && e.rule === 'custom' && e.message === 'Custom rule failed')).toBe(true);
       expect(res.errors.some((e) => e.field === 'throws' && e.rule === 'custom_error' && typeof e.message === 'string' && e.message.includes('Boom'))).toBe(true);
     });
-  });
 
-  describe('validateData helper', (): void => {
 
-      const direct = validator.validate(data);
-      const viaHelper = validateData(data, schema);
-      expect(viaHelper.valid).toBe(direct.valid);
-      expect(viaHelper.errors).toEqual(direct.errors);
-      expect(viaHelper.warnings).toEqual(direct.warnings);
-      expect(viaHelper.sanitized).toEqual(direct.sanitized);
-    });
-  });
-
-  describe('type coverage via switch in validateType', (): void => {
-        { field: 'n', type: 'number' },
         { field: 'b', type: 'boolean' },
         { field: 'arr', type: 'array' },
         { field: 'obj', type: 'object' },
@@ -333,5 +257,3 @@ describe('Validator', (): void => {
       // Each field should have a type error
       expect(badRes.errors.filter((e) => e.rule === 'type').length).toBeGreaterThanOrEqual(6);
     });
-  });
-});

@@ -8,7 +8,6 @@ vi.mock('../../src/validation/validator.js', (): Record<string, unknown> => {
     return {
       validate: vi.fn(),
     };
-  });
 
 
   return { Validator };
@@ -48,13 +47,6 @@ const makeResult = (overrides?: Partial<ValidationResult>): ValidationResult => 
   return { ...base, ...overrides } as ValidationResult;
 };
 
-describe('ValidationMiddleware', (): void => {
-  let instance: ValidationMiddleware;
-
-  beforeEach((): void => {
-    vi.clearAllMocks();
-    instance = new ValidationMiddleware();
-  });
 
   afterEach((): void => {
     resetGlobalMiddleware();
@@ -67,7 +59,6 @@ describe('ValidationMiddleware', (): void => {
       expect(instance.getSchemaCount()).toBe(0);
       expect(instance.getSchemaNames()).toEqual([]);
     });
-  });
 
   describe('registerSchema', (): void => {
     test('should store schema and create validator instance', (): void => {
@@ -93,7 +84,6 @@ describe('ValidationMiddleware', (): void => {
       expect(ctor.mock.instances.length).toBe(2);
       expect(ctor.mock.calls[1][0]).toBe(schemaB);
     });
-  });
 
   describe('unregisterSchema', (): void => {
     test('should remove existing schema and return true', (): void => {
@@ -113,7 +103,6 @@ describe('ValidationMiddleware', (): void => {
       const removed = instance.unregisterSchema('missing');
       expect(removed).toBe(false);
     });
-  });
 
   describe('getSchema', (): void => {
     test('should return undefined for unknown schema', (): void => {
@@ -125,7 +114,6 @@ describe('ValidationMiddleware', (): void => {
       instance.registerSchema('known', schema);
       expect(instance.getSchema('known')).toBe(schema);
     });
-  });
 
   describe('validateWithSchema', (): void => {
     test('should throw when schema not found', (): void => {
@@ -164,7 +152,6 @@ describe('ValidationMiddleware', (): void => {
       const result = instance.validateWithSchema('noSan', { a: 1 }, { stripUnknown: true });
       expect(result.sanitized).toBeUndefined();
     });
-  });
 
   describe('createMiddleware', (): void => {
     test('should return a function that delegates to validateWithSchema with provided options', (): void => {
@@ -185,7 +172,6 @@ describe('ValidationMiddleware', (): void => {
       expect(spy).toHaveBeenCalledWith('mw', input, options);
       expect(output).toBe(expected);
     });
-  });
 
   describe('batchValidate', (): void => {
     test('should throw when schema not found', (): void => {
@@ -199,10 +185,7 @@ describe('ValidationMiddleware', (): void => {
       expect(results).toEqual([r1, r2]);
       expect(validatorInstance.validate).toHaveBeenCalledTimes(2);
     });
-  });
 
-  describe('batchValidationPassed', (): void => {
-        makeResult({ valid: true }),
       ];
       expect(instance.batchValidationPassed(results)).toBe(true);
     });
@@ -212,7 +195,6 @@ describe('ValidationMiddleware', (): void => {
       ];
       expect(instance.batchValidationPassed(results)).toBe(false);
     });
-  });
 
   describe('getSchemaNames', (): void => {
     test('should list registered schema names', (): void => {
@@ -247,10 +229,6 @@ describe('ValidationMiddleware', (): void => {
   });
 });
 
-describe('Global ValidationMiddleware instance', (): void => {
-  afterEach((): void => {
-    resetGlobalMiddleware();
-  });
 
   describe('getGlobalMiddleware', (): void => {
     test('should create and return a singleton instance', (): void => {

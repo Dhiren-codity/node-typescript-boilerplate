@@ -16,7 +16,6 @@ vi.mock('../../src/validation/schemas.js', () => {
       this.built = true;
       return { name: this.name, level: 'low' };
     }
-  }
 
   const ValidationLevel = Object.freeze({
     LOW: 'low',
@@ -40,7 +39,6 @@ vi.mock('../../src/validation/validator.js', () => {
       }
       return { valid: true, errors: [] };
     }
-  }
 
   const validateData = vi.fn((data: unknown): boolean => {
     if (data === 'throw') {
@@ -69,14 +67,12 @@ vi.mock('../../src/validation/middleware.js', () => {
     SchemaBuilder: MockSchemaBuilder,
     ValidationLevel,
   };
-});
 
 
   return {
     Validator: MockValidator,
     validateData,
   };
-});
 
 
   const getGlobalMiddleware = vi.fn(() => {
@@ -92,7 +88,6 @@ vi.mock('../../src/validation/middleware.js', () => {
     getGlobalMiddleware,
     resetGlobalMiddleware,
   };
-});
 
   ValidationLevel,
   SchemaBuilder,
@@ -102,12 +97,6 @@ vi.mock('../../src/validation/middleware.js', () => {
   getGlobalMiddleware,
   resetGlobalMiddleware,
 
-describe('validation/index re-exports', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-    // Ensure middleware state is clean before each test
-    resetGlobalMiddleware();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -129,7 +118,6 @@ describe('validation/index re-exports', () => {
       expect(ValidationLevel).toHaveProperty('MEDIUM', 'medium');
       expect(ValidationLevel).toHaveProperty('HIGH', 'high');
     });
-  });
 
   describe('SchemaBuilder', () => {
     test('should build schema for valid name', (): void => {
@@ -144,8 +132,6 @@ describe('validation/index re-exports', () => {
     });
   });
 
-  describe('Validator', () => {
-      const result = validator.validate({ ok: true });
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
     });

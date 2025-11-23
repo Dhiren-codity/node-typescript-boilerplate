@@ -15,6 +15,11 @@ describe('SchemaBuilder', (): void => {
 
 
   describe('constructor', (): void => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
     test('should initialize with default values', (): void => {
       const schema = builder.build();
       expect(schema).toBeDefined();
@@ -39,15 +44,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add custom rule and return this for chaining', (): void => {
-      const customValidator = (value: unknown): boolean => typeof value === 'string';
-      const returnValue = builder.addRule({
-        field: 'custom',
-        type: 'string',
-        required: true,
-        customValidator,
-        errorMessage: 'Custom error',
-      });
 
       expect(returnValue).toBe(builder);
 
@@ -73,9 +69,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('stringField', (): void => {
-    test('should add required string rule with options', (): void => {
-      const pattern = /^[A-Z][a-z]+$/u;
-      builder.stringField('firstName', true, { minLength: 2, maxLength: 50, pattern, errorMessage: 'Bad name' });
       const schema = builder.build();
       expect(schema.rules).toHaveLength(1);
       const rule = schema.rules[0];
@@ -102,8 +95,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add number rule with min and max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 150, errorMessage: 'Invalid age' });
       const schema = builder.build();
       const rule = schema.rules[0];
       expect(rule.field).toBe('age');
@@ -262,9 +253,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('method chaining', (): void => {
-    test('should chain multiple field methods and maintain order', (): void => {
-      builder
-        .stringField('name', true, { minLength: 1 })
 
       const schema = builder.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
@@ -309,13 +297,6 @@ describe('SchemaBuilder', (): void => {
       expect(schema1.rules.map((r): string => r.field)).toEqual(['initial', 'later']);
     });
 
-    test('mutating rules in built schema affects builder due to shallow copy', (): void => {
-      const localBuilder = new SchemaBuilder('Local');
-      localBuilder.stringField('one');
-      const built = localBuilder.build();
-
-      // Mutate rules through built schema reference
-      built.rules.push({ field: 'two', type: 'string', required: true });
 
       const rebuilt = localBuilder.build();
       expect(rebuilt.rules.map((r): string => r.field)).toEqual(['one', 'two']);

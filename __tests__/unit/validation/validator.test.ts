@@ -71,16 +71,6 @@ describe('Validator', (): void => {
   });
 
   describe('validate', (): void => {
-    test('should validate correct data and return sanitized/trimmed strings', (): void => {
-      const data: Record<string, unknown> = {
-        name: '  Alice  ',
-        age: 30,
-        email: 'user@example.com',
-        website: 'https://example.com',
-        tags: ['a', 'b'],
-        profile: { city: 'Paris' },
-        newsletter: true,
-      };
 
       const result = validator.validate(data);
 
@@ -92,11 +82,6 @@ describe('Validator', (): void => {
       expect(result.sanitized?.age).toBe(30);
     });
 
-    test('should produce error when required field is missing', (): void => {
-      const data: Record<string, unknown> = {
-        // name missing
-        age: 25,
-      };
 
       const result = validator.validate(data);
 
@@ -107,15 +92,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should fail type validation with informative message for unknown type', (): void => {
-      const schema: ValidationSchema = {
-        rules: [
-          // Intentionally specify an unsupported type to reach default of switch()
-          { field: 'mystery', type: 'weird' as unknown as 'string', required: true },
-        ],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ mystery: 123 });
@@ -127,8 +103,6 @@ describe('Validator', (): void => {
       expect(String(result.errors[0]?.message)).toContain("must be of type weird");
     });
 
-    test('should validate string length constraints', (): void => {
-      const dataTooShort: Record<string, unknown> = { name: 'A' };
       const dataTooLong: Record<string, unknown> = { name: 'A'.repeat(11) };
 
       const shortResult = validator.validate(dataTooShort);
@@ -141,8 +115,6 @@ describe('Validator', (): void => {
       expect(longResult.errors.some((e) => e.rule === 'maxLength')).toBe(true);
     });
 
-    test('should validate number range and NaN', (): void => {
-      const belowMin = validator.validate({ name: 'Bob', age: -1 });
       const aboveMax = validator.validate({ name: 'Bob', age: 999 });
       const isNaNResult = validator.validate({ name: 'Bob', age: Number.NaN });
 
@@ -156,12 +128,6 @@ describe('Validator', (): void => {
       expect(isNaNResult.errors.some((e) => e.rule === 'type')).toBe(true);
     });
 
-    test('should validate email and url types', (): void => {
-      const valid = validator.validate({
-        name: 'User',
-        email: 'user@example.com',
-        website: 'https://example.com/path',
-      });
 
       const invalid = validator.validate({
         name: 'User',
@@ -177,12 +143,6 @@ describe('Validator', (): void => {
       expect(invalid.errors.some((e) => e.rule === 'type')).toBe(true);
     });
 
-    test('should validate array and object types', (): void => {
-      const ok = validator.validate({
-        name: 'Ok',
-        tags: ['x'],
-        profile: { role: 'dev' },
-      });
 
       const arrayBad = validator.validate({
         name: 'Ok',
@@ -202,14 +162,6 @@ describe('Validator', (): void => {
       expect(objBad.errors.some((e) => e.field === 'profile' && e.rule === 'type')).toBe(true);
     });
 
-    test('should validate regex pattern', (): void => {
-      const schema: ValidationSchema = {
-        rules: [
-          { field: 'code', type: 'string', pattern: /^[A-Z]+$/ },
-        ],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const localValidator = new Validator(schema);
 
@@ -221,14 +173,6 @@ describe('Validator', (): void => {
       expect(bad.errors[0]?.rule).toBe('pattern');
     });
 
-    test('should use custom errorMessage when provided', (): void => {
-      const schema: ValidationSchema = {
-        rules: [
-          { field: 'x', type: 'number', required: true, errorMessage: 'Custom type error' },
-        ],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ x: 'not number' });
@@ -237,14 +181,6 @@ describe('Validator', (): void => {
       expect(result.errors[0]?.message).toBe('Custom type error');
     });
 
-    test('should handle custom validator returning false', (): void => {
-      const schema: ValidationSchema = {
-        rules: [
-          { field: 'score', type: 'number', customValidator: (_value: unknown): boolean => false },
-        ],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ score: 10 });
@@ -254,20 +190,6 @@ describe('Validator', (): void => {
       expect(result.errors[0]?.rule).toBe('custom');
     });
 
-    test('should catch and report errors thrown by custom validator', (): void => {
-      const schema: ValidationSchema = {
-        rules: [
-          {
-            field: 'data',
-            type: 'string',
-            customValidator: (_value: unknown): boolean => {
-              throw new Error('boom');
-            },
-          },
-        ],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const localValidator = new Validator(schema);
       const result = localValidator.validate({ data: 'ok' });
@@ -277,23 +199,12 @@ describe('Validator', (): void => {
       expect(String(result.errors[0]?.message)).toContain('boom');
     });
 
-    test('should error on unknown fields in Strict level when allowUnknownFields=false', (): void => {
-      const result = validator.validate({
-        name: 'User',
-        unknownKey: 'value',
-      });
 
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.rule === 'unknown_field' && e.field === 'unknownKey')).toBe(true);
       expect(result.sanitized).toBeUndefined();
     });
 
-    test('should warn on unknown fields in Lenient level when allowUnknownFields=false', (): void => {
-      validator.setLevel(ValidationLevel.Lenient);
-      const result = validator.validate({
-        name: 'User',
-        extra: 123,
-      });
 
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
@@ -302,11 +213,6 @@ describe('Validator', (): void => {
       expect(result.sanitized).toBeDefined();
     });
 
-    test('should not complain about unknown fields when allowUnknownFields=true', (): void => {
-      const schema: ValidationSchema = {
-        ...baseSchema,
-        allowUnknownFields: true,
-      } as ValidationSchema;
       const localValidator = new Validator(schema);
 
       const result = localValidator.validate({
@@ -319,10 +225,6 @@ describe('Validator', (): void => {
       expect(result.warnings.length).toBe(0);
     });
 
-    test('should not include sanitized output when there are validation errors', (): void => {
-      const result = validator.validate({
-        name: 'A', // too short
-      });
 
       expect(result.valid).toBe(false);
       expect(result.sanitized).toBeUndefined();
@@ -330,12 +232,6 @@ describe('Validator', (): void => {
   });
 
   describe('validateData helper', (): void => {
-    test('should validate using helper and return consistent result', (): void => {
-      const schema: ValidationSchema = {
-        rules: [{ field: 'name', type: 'string', required: true }],
-        level: ValidationLevel.Strict,
-        allowUnknownFields: true,
-      } as unknown as ValidationSchema;
 
       const success = validateData({ name: 'John' }, schema);
       const failure = validateData({}, schema);

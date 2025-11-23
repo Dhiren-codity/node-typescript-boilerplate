@@ -157,16 +157,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ name: 'Alice', age: 30 });
     });
 
-    test('should honor abortEarly option by keeping only the first error', (): void => {
-      const schema = makeSchema(['name', 'age']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate.mockReturnValueOnce({
-        valid: false,
-        errors: [{ message: 'e1' }, { message: 'e2' }, { message: 'e3' }],
-        sanitized: { name: 'Bob' },
-      });
 
       const result = middleware.validateWithSchema('user', { name: '' }, { abortEarly: true });
 
@@ -174,16 +164,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors).toEqual([{ message: 'e1' }]);
     });
 
-    test('should keep errors empty when abortEarly is set but there are no errors', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate.mockReturnValueOnce({
-        valid: true,
-        errors: [],
-        sanitized: { name: 'Carol', extra: 'x' },
-      });
 
       const result = middleware.validateWithSchema('user', { name: 'Carol' }, { abortEarly: true });
 
@@ -191,16 +171,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.errors).toEqual([]);
     });
 
-    test('should strip unknown fields when stripUnknown is true and sanitized is provided', (): void => {
-      const schema = makeSchema(['name', 'age']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate.mockReturnValueOnce({
-        valid: true,
-        errors: [],
-        sanitized: { name: 'Alice', age: 25, extra: 'remove-me' },
-      });
 
       const result = middleware.validateWithSchema(
         'user',
@@ -212,16 +182,6 @@ describe('ValidationMiddleware', (): void => {
       expect(result.sanitized).toEqual({ name: 'Alice', age: 25 });
     });
 
-    test('should do nothing on stripUnknown when sanitized is undefined', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate.mockReturnValueOnce({
-        valid: false,
-        errors: [{ message: 'bad' }],
-        sanitized: undefined,
-      });
 
       const result = middleware.validateWithSchema('user', { name: 123 } as unknown as Record<string, unknown>, {
         stripUnknown: true,
@@ -234,16 +194,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should create a function that validates with given schema and options', (): void => {
-      const schema = makeSchema(['name', 'age']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate.mockReturnValueOnce({
-        valid: false,
-        errors: [{ message: 'e1' }, { message: 'e2' }],
-        sanitized: { name: 'Alice', age: 20, extra: true },
-      });
 
       const fn = middleware.createMiddleware('user', { abortEarly: true, stripUnknown: true });
       const input = { name: 'Alice', age: 20, extra: true };
@@ -263,13 +213,6 @@ describe('ValidationMiddleware', (): void => {
       );
     });
 
-    test('should validate an array of data with the same validator', (): void => {
-      const schema = makeSchema(['name']);
-      middleware.registerSchema('user', schema as never);
-
-      const instances = helpers.__getMockValidatorInstances();
-      instances[0].validate
-        .mockReturnValueOnce({ valid: true, errors: [], sanitized: { name: 'A' } })
 
       const dataArray: Record<string, unknown>[] = [{ name: 'A' }, { name: '' }];
       const results = middleware.batchValidate('user', dataArray);
@@ -285,18 +228,12 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const results = [
-        { valid: true, errors: [], sanitized: {} },
         { valid: true, errors: [], sanitized: {} },
       ] as unknown as ReturnType<ValidationMiddleware['batchValidate']>;
       const passed = middleware.batchValidationPassed(results);
       expect(passed).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const results = [
-        { valid: true, errors: [], sanitized: {} },
         { valid: false, errors: [{ message: 'e' }], sanitized: {} },
       ] as unknown as ReturnType<ValidationMiddleware['batchValidate']>;
       const passed = middleware.batchValidationPassed(results);

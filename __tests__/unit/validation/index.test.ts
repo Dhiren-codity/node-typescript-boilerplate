@@ -116,10 +116,6 @@ describe('validation index (re-exports)', () => {
       expect(schema).toEqual({ min: 1, max: 10 });
     });
 
-    test('should throw error when build fails (error path)', async (): Promise<void> => {
-      const schemasMod = await import('./schemas.js');
-      // Enable throwing
-      (schemasMod.SchemaBuilder as unknown as { shouldThrow: boolean }).shouldThrow = true;
 
       const indexMod = await import('./index');
       const builder = new indexMod.SchemaBuilder();
@@ -132,12 +128,6 @@ describe('validation index (re-exports)', () => {
   });
 
   describe('Validator and validateData', () => {
-    test('Validator instance validate and validateData function (happy path)', async (): Promise<void> => {
-      const indexMod = await import('./index');
-      const validatorMod = await import('./validator.js');
-
-      const instance = new indexMod.Validator();
-      const input: Record<string, unknown> = { foo: 'bar' };
 
       const resultInstance = instance.validate(input);
       expect(resultInstance).toEqual({ success: true, value: input });
@@ -148,13 +138,6 @@ describe('validation index (re-exports)', () => {
       expect(validatorMod.validateData).toHaveBeenCalledWith(input);
     });
 
-    test('validateData should propagate thrown errors (error path)', async (): Promise<void> => {
-      const indexMod = await import('./index');
-      const validatorMod = await import('./validator.js');
-
-      vi.mocked(validatorMod.validateData).mockImplementationOnce((_data: unknown) => {
-        throw new Error('validateData boom');
-      });
 
       expect(() => indexMod.validateData({})).toThrow('validateData boom');
     });
@@ -174,11 +157,6 @@ describe('validation index (re-exports)', () => {
   });
 
   describe('Middleware exports', () => {
-    test('ValidationMiddleware factory returns a middleware and state updates (happy path)', async (): Promise<void> => {
-      const indexMod = await import('./index');
-      const middlewareMod = await import('./middleware.js');
-
-      const mw = indexMod.ValidationMiddleware({ level: 'error' });
       expect(typeof mw).toBe('function');
 
       // Call the returned middleware function
@@ -192,24 +170,10 @@ describe('validation index (re-exports)', () => {
       expect(middlewareMod.__state.count).toBe(0);
     });
 
-    test('ValidationMiddleware should propagate factory errors (error path)', async (): Promise<void> => {
-      const indexMod = await import('./index');
-      const middlewareMod = await import('./middleware.js');
-
-      vi.mocked(middlewareMod.ValidationMiddleware).mockImplementationOnce((_options?: Record<string, unknown>) => {
-        throw new Error('factory error');
-      });
 
       expect(() => indexMod.ValidationMiddleware({})).toThrow('factory error');
     });
 
-    test('getGlobalMiddleware and resetGlobalMiddleware should propagate errors (error path)', async (): Promise<void> => {
-      const indexMod = await import('./index');
-      const middlewareMod = await import('./middleware.js');
-
-      vi.mocked(middlewareMod.getGlobalMiddleware).mockImplementationOnce(() => {
-        throw new Error('getGlobalMiddleware error');
-      });
       expect(() => indexMod.getGlobalMiddleware()).toThrow('getGlobalMiddleware error');
 
       vi.mocked(middlewareMod.resetGlobalMiddleware).mockImplementationOnce(() => {

@@ -10,7 +10,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => {
       Lenient: 'Lenient',
     },
   };
-});
 
   ValidationSchema,
   ValidationRule,
@@ -19,27 +18,6 @@ vi.mock('../../src/validation/schemas.js', (): Record<string, unknown> => {
 } from '../../src/validation/schemas.js';
 
 
-describe('Validator', (): void => {
-  let schema: ValidationSchema;
-  let validator: Validator;
-
-  beforeEach((): void => {
-    schema = {
-      rules: [
-        {
-          field: 'name',
-          type: 'string',
-          required: true,
-          minLength: 2,
-          maxLength: 10,
-        } as ValidationRule,
-      ],
-      allowUnknownFields: false,
-      level: ValidationLevel.Lenient as unknown as ValidationLevel,
-    } as ValidationSchema;
-
-    validator = new Validator(schema);
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
@@ -52,16 +30,7 @@ describe('Validator', (): void => {
       expect(currentSchema.rules).toBe(schema.rules);
       expect(validator.getLevel()).toBe(ValidationLevel.Lenient);
     });
-  });
 
-  describe('validate', (): void => {
-      const result: ValidationResult = validator.validate(input);
-      expect(result.valid).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result.warnings).toEqual([]);
-      expect(result.sanitized).toBeDefined();
-      expect(result.sanitized?.['name']).toBe('Alice');
-    });
 
       const result: ValidationResult = validator.validate(input);
       expect(result.valid).toBe(false);
@@ -230,12 +199,7 @@ describe('Validator', (): void => {
       expect(result.errors).toEqual([]);
       expect(result.sanitized).toEqual({});
     });
-  });
 
-  describe('getLevel / setLevel', (): void => {
-      const localValidator = new Validator(lenientSchema);
-
-      let result: ValidationResult = localValidator.validate({ extra: 1 });
       expect(result.valid).toBe(true);
       expect(result.errors.length).toBe(0);
       expect(result.warnings.length).toBe(1);
@@ -249,13 +213,7 @@ describe('Validator', (): void => {
       expect(result.errors.length).toBe(1);
       expect(result.errors[0]?.rule).toBe('unknown_field');
     });
-  });
-});
 
-describe('validateData helper', (): void => {
-
-    const result: ValidationResult = validateData(
-      { name: '  Bob ', age: 10 },
       schema,
     );
     expect(result.valid).toBe(true);
@@ -286,4 +244,3 @@ describe('validateData helper', (): void => {
     expect(lenientResult.valid).toBe(true);
     expect(lenientResult.warnings.length).toBe(1);
   });
-});

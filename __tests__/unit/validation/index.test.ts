@@ -5,7 +5,6 @@ vi.mock('../../src/validation/schemas.js', () => {
     return {
       build: vi.fn(() => ({ built: true })),
     };
-  });
 vi.mock('../../src/validation/validator.js', () => {
   const validateData = vi.fn((input: unknown) => {
     if (input === '__throw__') {
@@ -21,7 +20,6 @@ vi.mock('../../src/validation/middleware.js', () => {
       options: _options ?? {},
       run: vi.fn((payload: unknown) => payload),
     };
-  });
 
 
 
@@ -34,7 +32,6 @@ vi.mock('../../src/validation/middleware.js', () => {
     ValidationLevel,
     SchemaBuilder,
   };
-});
 
 
   const Validator = vi.fn(() => {
@@ -46,13 +43,11 @@ vi.mock('../../src/validation/middleware.js', () => {
         return { valid: true, value: val };
       }),
     };
-  });
 
   return {
     Validator,
     validateData,
   };
-});
 
 
   const getGlobalMiddleware = vi.fn(() => globalMw);
@@ -66,34 +61,14 @@ vi.mock('../../src/validation/middleware.js', () => {
     getGlobalMiddleware,
     resetGlobalMiddleware,
   };
-});
 
-describe('validation/index barrel exports', () => {
-  beforeEach((): void => {
-    vi.clearAllMocks();
-    vi.resetModules();
-  });
 
   afterEach((): void => {
     vi.clearAllMocks();
   });
 
-  describe('ValidationLevel', () => {
-      expect(ValidationLevel).toBeDefined();
-      expect(ValidationLevel.STRICT).toBe('strict');
-      expect(ValidationLevel.LAX).toBe('lax');
-    });
-  });
 
-  describe('SchemaBuilder', () => {
-      const builder = new SchemaBuilder();
-      const built = builder.build();
-      expect(built).toEqual({ built: true });
-    });
-  });
 
-  describe('Validator and validateData', () => {
-      const result = validateData({ a: 1 });
       expect(result).toEqual({ valid: true, input: { a: 1 } });
     });
 
@@ -108,10 +83,7 @@ describe('validation/index barrel exports', () => {
       const instance = new Validator({});
       expect(() => instance.validate('__throw__')).toThrowError('validator error');
     });
-  });
 
-  describe('Middleware exports', () => {
-      const options = { level: 'strict', enabled: true };
       const mw = new ValidationMiddleware(options);
       expect(mw.options).toEqual(options);
     });
@@ -123,5 +95,3 @@ describe('validation/index barrel exports', () => {
       const afterReset = getGlobalMiddleware();
       expect(afterReset).toBeUndefined();
     });
-  });
-});

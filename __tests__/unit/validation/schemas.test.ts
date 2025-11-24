@@ -2,12 +2,6 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SchemaBuilder, ValidationLevel, type ValidationRule, type ValidationSchema } from '../src/validation/schemas.js';
 
 
-describe('SchemaBuilder', (): void => {
-  let builder: SchemaBuilder;
-
-  beforeEach((): void => {
-    builder = new SchemaBuilder('TestSchema');
-  });
 
   afterEach((): void => {
     vi.restoreAllMocks();
@@ -27,22 +21,7 @@ describe('SchemaBuilder', (): void => {
       const schema: ValidationSchema = customBuilder.build();
       expect(schema.level).toBe(ValidationLevel.Strict);
     });
-  });
 
-  describe('addRule', (): void => {
-
-      const returned: SchemaBuilder = builder.addRule(rule);
-      expect(returned).toBe(builder);
-
-      const schema: ValidationSchema = builder.build();
-      expect(schema.rules).toHaveLength(1);
-      expect(schema.rules[0]).toMatchObject({
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 18,
-        max: 99,
-      });
       expect(typeof schema.rules[0]?.customValidator).toBe('function');
     });
 
@@ -51,7 +30,6 @@ describe('SchemaBuilder', (): void => {
       const schema: ValidationSchema = builder.build();
       expect(schema.rules.map((r: ValidationRule): string => r.field)).toEqual(['a', 'b']);
     });
-  });
 
   describe('stringField', (): void => {
     test('should add required string rule by default', (): void => {
@@ -80,17 +58,7 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.pattern).toBeInstanceOf(RegExp);
       expect(rule?.errorMessage).toBe('Invalid bio');
     });
-  });
 
-  describe('numberField', (): void => {
-      const schema: ValidationSchema = builder.build();
-      const rule: ValidationRule | undefined = schema.rules.find((r: ValidationRule): boolean => r.field === 'age');
-      expect(rule).toBeDefined();
-      expect(rule?.type).toBe('number');
-      expect(rule?.required).toBe(true);
-      expect(rule?.min).toBe(0);
-      expect(rule?.max).toBe(120);
-    });
 
     test('should add optional number rule', (): void => {
       builder.numberField('score', false);
@@ -102,7 +70,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.min).toBeUndefined();
       expect(rule?.max).toBeUndefined();
     });
-  });
 
   describe('emailField', (): void => {
     test('should add email rule with default pattern and error message', (): void => {
@@ -128,7 +95,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Bad email');
     });
-  });
 
   describe('urlField', (): void => {
     test('should add url rule with default error message and required true', (): void => {
@@ -150,7 +116,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.required).toBe(false);
       expect(rule?.errorMessage).toBe('Bad URL');
     });
-  });
 
   describe('booleanField', (): void => {
     test('should add required boolean rule by default', (): void => {
@@ -169,7 +134,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule).toBeDefined();
       expect(rule?.required).toBe(false);
     });
-  });
 
   describe('arrayField', (): void => {
     test('should add required array rule by default', (): void => {

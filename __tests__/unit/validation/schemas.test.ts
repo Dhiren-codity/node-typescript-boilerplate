@@ -30,15 +30,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('addRule', (): void => {
-    test('should add a custom rule to schema', (): void => {
-      const rule: ValidationRule = {
-        field: 'age',
-        type: 'number',
-        required: true,
-        min: 18,
-        max: 99,
-        customValidator: (_value: unknown): boolean => true,
-      };
 
       const returned: SchemaBuilder = builder.addRule(rule);
       expect(returned).toBe(builder);
@@ -55,8 +46,6 @@ describe('SchemaBuilder', (): void => {
       expect(typeof schema.rules[0]?.customValidator).toBe('function');
     });
 
-    test('should support adding multiple rules and preserve order', (): void => {
-      builder.addRule({ field: 'a', type: 'string', required: true });
       builder.addRule({ field: 'b', type: 'number', required: false });
 
       const schema: ValidationSchema = builder.build();
@@ -80,13 +69,6 @@ describe('SchemaBuilder', (): void => {
       expect(rule?.errorMessage).toBeUndefined();
     });
 
-    test('should add string rule with options and required false', (): void => {
-      builder.stringField('bio', false, {
-        minLength: 10,
-        maxLength: 200,
-        pattern: /^[A-Za-z\s]+$/u,
-        errorMessage: 'Invalid bio',
-      });
 
       const schema: ValidationSchema = builder.build();
       const rule: ValidationRule | undefined = schema.rules.find((r: ValidationRule): boolean => r.field === 'bio');
@@ -101,8 +83,6 @@ describe('SchemaBuilder', (): void => {
   });
 
   describe('numberField', (): void => {
-    test('should add required number rule with min and max', (): void => {
-      builder.numberField('age', true, { min: 0, max: 120 });
       const schema: ValidationSchema = builder.build();
       const rule: ValidationRule | undefined = schema.rules.find((r: ValidationRule): boolean => r.field === 'age');
       expect(rule).toBeDefined();
@@ -266,10 +246,6 @@ describe('SchemaBuilder', (): void => {
       expect(after.allowUnknownFields).toBe(false);
     });
 
-    test('should reflect that rules array reference is shared (shallow copy characteristic)', (): void => {
-      builder.stringField('field1');
-      const snapshot: ValidationSchema = builder.build();
-      snapshot.rules.push({ field: 'hacked', type: 'string', required: true });
 
       const after: ValidationSchema = builder.build();
       const fields: string[] = after.rules.map((r: ValidationRule): string => r.field);

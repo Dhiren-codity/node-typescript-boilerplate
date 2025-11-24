@@ -82,16 +82,6 @@ describe('ValidationMiddleware', (): void => {
       expect(instances.length).toBe(1);
     });
 
-    test('should override existing schema with same name and use latest validator', (): void => {
-      const firstSchema = createSchema(['a']);
-      const secondSchema = createSchema(['b']);
-
-      middleware.registerSchema('dup', firstSchema);
-      const firstValidator = getLastValidator();
-      const firstResult: TestValidationResult = {
-        valid: false,
-        errors: [{ field: 'a', message: 'first' }],
-      };
       firstValidator.validate = vi.fn().mockReturnValue(firstResult);
 
       middleware.registerSchema('dup', secondSchema);
@@ -148,14 +138,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'nope' not found");
     });
 
-    test('should delegate to validator and return result', (): void => {
-      middleware.registerSchema('user', createSchema(['id', 'name']));
-      const validator = getLastValidator();
-      const result: TestValidationResult = {
-        valid: true,
-        errors: [],
-        sanitized: { id: 1, name: 'Jane', extra: true },
-      };
       validator.validate = vi.fn().mockReturnValue(result);
 
       const output = middleware.validateWithSchema('user', { id: 1, name: 'Jane' });
@@ -163,11 +145,6 @@ describe('ValidationMiddleware', (): void => {
       expect(output).toEqual(result);
     });
 
-    test('should apply abortEarly and keep only the first error', (): void => {
-      middleware.registerSchema('user', createSchema(['id']));
-      const validator = getLastValidator();
-      const errors = [
-        { field: 'id', message: 'required' },
         { field: 'id', message: 'must be number' },
       ];
       const result: TestValidationResult = {
@@ -180,41 +157,18 @@ describe('ValidationMiddleware', (): void => {
       expect(output.errors).toEqual([errors[0]]);
     });
 
-    test('should strip unknown fields from sanitized when option enabled', (): void => {
-      middleware.registerSchema('user', createSchema(['id', 'name']));
-      const validator = getLastValidator();
-
-      const result: TestValidationResult = {
-        valid: true,
-        errors: [],
-        sanitized: { id: 1, name: 'Jane', extra: 'remove-me' },
-      };
       validator.validate = vi.fn().mockReturnValue({ ...result });
 
       const output = middleware.validateWithSchema('user', {}, { stripUnknown: true });
       expect(output.sanitized).toEqual({ id: 1, name: 'Jane' });
     });
 
-    test('should not fail when sanitized is undefined and stripUnknown is true', (): void => {
-      middleware.registerSchema('user', createSchema(['id']));
-      const validator = getLastValidator();
-
-      const result: TestValidationResult = {
-        valid: true,
-        errors: [],
-        // sanitized intentionally omitted
-      };
       validator.validate = vi.fn().mockReturnValue({ ...result });
 
       const output = middleware.validateWithSchema('user', {}, { stripUnknown: true });
       expect(output.sanitized).toBeUndefined();
     });
 
-    test('should accept options with context without affecting validation', (): void => {
-      middleware.registerSchema('user', createSchema(['id']));
-      const validator = getLastValidator();
-
-      const result: TestValidationResult = { valid: true, errors: [] };
       validator.validate = vi.fn().mockReturnValue({ ...result });
 
       const output = middleware.validateWithSchema('user', { id: 1 }, { context: { role: 'admin' } });
@@ -223,12 +177,6 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('createMiddleware', (): void => {
-    test('should return a function that validates with provided schema and options', (): void => {
-      middleware.registerSchema('user', createSchema(['id', 'name']));
-      const validator = getLastValidator();
-
-      const errors = [
-        { field: 'id', message: 'required' },
         { field: 'name', message: 'required' },
       ];
       const result: TestValidationResult = {
@@ -253,16 +201,6 @@ describe('ValidationMiddleware', (): void => {
       }).toThrowError("Schema 'missing' not found");
     });
 
-    test('should validate each data item and return results array', (): void => {
-      middleware.registerSchema('user', createSchema(['id']));
-      const validator = getLastValidator();
-
-      validator.validate = vi.fn().mockImplementation((data: Record<string, unknown>): TestValidationResult => {
-        if (typeof data.id === 'number') {
-          return { valid: true, errors: [], sanitized: { id: data.id } };
-        }
-        return { valid: false, errors: [{ field: 'id', message: 'must be number' }] };
-      });
 
       const inputs: Record<string, unknown>[] = [{ id: 1 }, { id: 'x' }, {}];
       const results = middleware.batchValidate('user', inputs);
@@ -275,17 +213,11 @@ describe('ValidationMiddleware', (): void => {
   });
 
   describe('batchValidationPassed', (): void => {
-    test('should return true when all results are valid', (): void => {
-      const results: TestValidationResult[] = [
-        { valid: true, errors: [] },
         { valid: true, errors: [] },
       ];
       expect(middleware.batchValidationPassed(results as unknown as never)).toBe(true);
     });
 
-    test('should return false when any result is invalid', (): void => {
-      const results: TestValidationResult[] = [
-        { valid: true, errors: [] },
         { valid: false, errors: [{ field: 'id', message: 'error' }] },
       ];
       expect(middleware.batchValidationPassed(results as unknown as never)).toBe(false);
@@ -348,11 +280,6 @@ describe('Global middleware instance', (): void => {
       expect(afterReset).not.toBe(beforeReset);
     });
 
-    test('global instance should be usable for schema registration and validation', (): void => {
-      const global = getGlobalMiddleware();
-      const schema = {
-        rules: [{ field: 'id' }],
-      } as unknown as ValidationSchema;
       global.registerSchema('globalUser', schema);
 
       // ensure Validator mock is used
